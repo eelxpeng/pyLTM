@@ -53,4 +53,7 @@ class AbstractNode(metaclass=ABCMeta):
     def hasNeighbor(self, node):
         return node in self._neighbors
     
+    def setName(self, name):
+        self._name = name
+    
     

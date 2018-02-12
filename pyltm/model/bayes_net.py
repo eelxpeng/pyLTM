@@ -56,7 +56,26 @@ class BayesNet(DirectedAcyclicGraph):
             self._variables[node.variable] = node
             self.expireLoglikelihoods()
         else:
-            raise ValueError("BayesNet addNode: only variable is allowed")
+            raise ValueError("BayesNet addNode: only variable/node is allowed")
+        return node
+    
+    def getNode(self, variable):
+        return self._variables[variable]
+    
+    def __str__(self):
+        toStr = "BayesNet " + self._name + " {\n"
+        toStr += "number of nodes: " + str(self.getNumberOfNodes()) +"\n"
+        toStr += "nodes = {\n"
+        for node in self.nodes:
+            toStr += str(node) + " "
+        toStr += "}\n"
+        toStr += "number of edges: " + str(self.getNumberOfEdges()) + "\n"
+        toStr += "edges = {\n"
+        for edge in self.edges:
+            toStr += str(edge) + " "
+        toStr += "\n}\n"
+        toStr += "}\n"
+        return toStr
         
         
         

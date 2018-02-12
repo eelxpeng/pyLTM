@@ -3,8 +3,8 @@ Created on 11 Feb 2018
 
 @author: Bryan
 '''
-
-class MyClass(object):
+from .potential import Potential
+class CGPotential(Potential):
     '''
     classdocs
     '''

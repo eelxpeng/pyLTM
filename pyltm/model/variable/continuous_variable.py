@@ -3,18 +3,20 @@ Created on 11 Feb 2018
 
 @author: Bryan
 '''
-from .continuous_variable import ContinuousVariable
-from sortedcontainers import SortedSet
-
-class SingularContinuousVariable(ContinuousVariable):
+from .variable import Variable
+from abc import abstractmethod
+class ContinuousVariable(Variable):
     '''
     classdocs
     '''
+
+
     def __init__(self, name):
         '''
         Constructor
         '''
         super().__init__(name)
         
+    @abstractmethod
     def variables(self):
-        return SortedSet([self])
+        pass
