@@ -33,6 +33,14 @@ class DirectedNode(AbstractNode):
     def parents(self):
         return self._parents
     
+    def isRoot(self):
+        return len(self._parents) == 0
+    
+    def getParent(self):
+        if self.isRoot():
+            return None
+        return self._parents.keys()[0]
+    
     
         
         

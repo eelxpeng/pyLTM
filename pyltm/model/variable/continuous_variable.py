@@ -11,7 +11,7 @@ class ContinuousVariable(Variable):
     '''
 
 
-    def __init__(self, name):
+    def __init__(self, name=None):
         '''
         Constructor
         '''

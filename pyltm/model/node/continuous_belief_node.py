@@ -5,7 +5,7 @@ Created on 11 Feb 2018
 '''
 from .belief_node import BeliefNode
 from ..variable import DiscreteVariable
-from ..variable import JointContinuousVariable
+from ..variable import JointContinuousVariable, SingularContinuousVariable
 from ..potential import CGPotential
 
 class ContinuousBeliefNode(BeliefNode):
@@ -19,6 +19,8 @@ class ContinuousBeliefNode(BeliefNode):
         '''
         if isinstance(variable, list):
             variable = JointContinuousVariable(variable)
+        elif isinstance(variable, SingularContinuousVariable):
+            variable = JointContinuousVariable([variable])
         if not isinstance(variable, JointContinuousVariable):
             raise ValueError("ContinuousBeliefNode should take JointContinuousVariable")
         super().__init__(graph, variable)

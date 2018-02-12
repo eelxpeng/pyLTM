@@ -1,13 +1,11 @@
 '''
 Conditional Probability Table Potential for discrete belief node
-Implemented using numpy
-May be extended to Tensor computation on GPU.
 Created on 11 Feb 2018
 
 @author: Bryan
 '''
 from .potential import Potential
-import numpy as np
+from ..parameter import CPTParameter
 
 class CPTPotential(Potential):
     '''
@@ -22,7 +20,7 @@ class CPTPotential(Potential):
         self._variables.append(variable)
         if parameter is None:
             # initialize the table to uniform
-            self._parameter = np.ones(variable.getCardinality())*1./variable.getCardinality()
+            self._parameter = CPTParameter(variable.getCardinality())
         else:
             self._parameter = parameter
         
@@ -30,11 +28,17 @@ class CPTPotential(Potential):
         return self.addVariable(variable)
         
     def addVariable(self, variable):
+        """
+        Not normalizing.
+        Let f and g be this function and the new function to be created, 
+        respectively. Also, let X and Y be the variables involved in f and the
+        new variable to be involved in g, respectively. We will set the cells of
+        g such that g(X, y) = f(X)
+        """
         assert not self.contains(variable.name)
         cardinality = variable.getCardinality()
         self._variables.append(variable)
-        self._parameter = self._parameter[..., np.newaxis]
-        self._parameter = np.repeat(self._parameter, cardinality, axis=-1)
+        self._parameter.expand_dim(-1, cardinality)
         return self
     
     def removeParentVariable(self, variable):
@@ -52,10 +56,7 @@ class CPTPotential(Potential):
             variableIndex = self._variables.index(variable)
             self._variables.pop(variableIndex)
             assert variableIndex>=0
-            swapped_array = np.swapaxes(self._parameter, 0, variableIndex)
-            swapped_array = swapped_array[[state], ...]
-            back = np.swapaxes(swapped_array, 0, variableIndex)
-            self._parameter = np.squeeze(back, axis=variableIndex)
+            self._parameter.reduce_dim(variableIndex, state)
         return self
         
     def contains(self, name):
@@ -67,10 +68,7 @@ class CPTPotential(Potential):
         """
         indexes = [variables.index(v) for v in self._variables]
         states = states[indexes]
-        ref = self._variables
-        for state in states[:-1]:
-            ref = ref[state]
-        ref[states[-1]] = cell
+        self._parameter.set_value(states, cell)
         
     def setCells(self, variables, cells):
         """
@@ -78,8 +76,7 @@ class CPTPotential(Potential):
         cells: numpy array
         """
         indexes = [variables.index(v) for v in self._variables]
-        cells = np.transpose(cells, axes=indexes)
-        self._parameter[:] = cells
+        self._parameter.set(cells, axes=indexes)
 
     def clone(self):
         pass
@@ -90,8 +87,9 @@ class CPTPotential(Potential):
     def marginalize(self, variable):
         pass
     
-    def normalize(self, constant):
-        pass
+    def normalize(self, constant=None):
+        return self._parameter.normalize(constant)
+            
     
     def __str__(self):
         toStr = "CPTPotential {\n"

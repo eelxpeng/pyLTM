@@ -12,11 +12,11 @@ class JointContinuousVariable(ContinuousVariable):
     '''
     classdocs
     '''
-    def __init__(self, name, variables):
+    def __init__(self, variables):
         '''
         Constructor
         '''
-        super().__init__(name)
+        super().__init__()
         if isinstance(variables, collections.Iterable):
             for v in variables:
                 assert isinstance(v, SingularContinuousVariable)
@@ -25,10 +25,10 @@ class JointContinuousVariable(ContinuousVariable):
             self._variables = SortedSet([variables])
         else:
             raise ValueError("Invalid Argument Type!")
-        self.setName(self.constructName)
+        self.setName(self.constructName())
         
     def constructName(self):
-        name = ",".join(self._variables)
+        name = ",".join([v.name for v in self._variables])
         return name
     
     def variables(self):
