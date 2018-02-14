@@ -22,7 +22,7 @@ class CGParameter(Parameter):
             self.mu = np.copy(mu)
             self.covar = np.copy(covar)
         
-    def copy(self):
+    def clone(self):
         newparameter = CGParameter(self.p, len(self.mu), self.mu, self.covar)
         return newparameter
     

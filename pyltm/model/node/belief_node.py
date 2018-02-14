@@ -9,7 +9,8 @@ from ..variable import DiscreteVariable
 
 class BeliefNode(DirectedNode):
     '''
-    classdocs
+    A belief node can only have one variable
+    Either a discrete variable or a joint continuous variable
     '''
 
     def __init__(self, graph, variable):

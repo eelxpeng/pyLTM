@@ -6,21 +6,24 @@ Created on 11 Feb 2018
 '''
 from .potential import Potential
 from ..parameter import CPTParameter
+from ..variable import Variable
 
 class CPTPotential(Potential):
     '''
     classdocs
     '''
-    def __init__(self, variable, parameter=None):
+    def __init__(self, variables, parameter=None):
         '''
-        Constructor
+        variables: a single Variable, or a list of Variable
+        parameter: CPTParameter or None
         '''
         super().__init__()
-        self._variables = list()    # save the variables involved
-        self._variables.append(variable)
+        if isinstance(variables, Variable):
+            variables = [variables]
+        self._variables = list(variables)    # save the variables involved
         if parameter is None:
             # initialize the table to uniform
-            self._parameter = CPTParameter(variable.getCardinality())
+            self._parameter = CPTParameter([v.getCardinality() for v in variables])
         else:
             self._parameter = parameter
         
@@ -79,7 +82,13 @@ class CPTPotential(Potential):
         self._parameter.set(cells, axes=indexes)
 
     def clone(self):
-        pass
+        """
+        copy _variables and _parameter
+        But does not copy the variable in the _variables. Keep the same reference
+        """
+        variables = list(self._variables)
+        parameters = self._parameter.clone()
+        return CPTPotential(variables, parameters)
     
     def function(self):
         pass
@@ -89,6 +98,10 @@ class CPTPotential(Potential):
     
     def normalize(self, constant=None):
         return self._parameter.normalize(constant)
+    
+    @property
+    def variables(self):
+        return self._variables
             
     
     def __str__(self):

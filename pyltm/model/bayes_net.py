@@ -12,16 +12,39 @@ class BayesNet(DirectedAcyclicGraph):
     classdocs
     '''
     _count = 0  # static variable: the number of BNs created
+    NAME_PREFIX = "BayesNet"
     
-    def __init__(self, name):
+    def __init__(self, name=None):
         '''
         Constructor
         '''
         super().__init__()
+        if name is None:
+            name = BayesNet.createDefaultName()
         self._name = name
         self._variables = dict()    # dict variable : beliefNode
         self._loglikelihood = dict()
         BayesNet._count += 1
+        
+    @staticmethod
+    def createDefaultName():
+        return BayesNet.NAME_PREFIX + str(BayesNet._count)
+    
+    @classmethod
+    def createFromOther(cls, other):
+        net = cls()
+        # copy nodes
+        for node in other.nodes:
+            net.addNode(node.variable)
+        # copy edges
+        for edge in other.edges:
+            net.addEdge(net.getNode(edge.head.name), net.getNode(edge.tail.name))
+        # copy CPT
+        for node in net.nodes:
+            othernode = other.getNode(node.variable)
+            node.setPotential(othernode.potential.clone())
+        net._loglikelihood = dict(other._loglikelihood)
+        return net
         
     def addEdge(self, head, tail):
         """

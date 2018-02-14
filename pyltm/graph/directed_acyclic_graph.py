@@ -59,22 +59,6 @@ class DirectedAcyclicGraph(AbstractGraph):
         elif isinstance(edge, DirectedNode) and isinstance(vertex2, DirectedNode):
             self.removeEdge(edge.getEdge(vertex2))
             
-    def __str__(self):
-        toStr = "Directed Acyclic Graph {\n"
-        toStr += "number of nodes: " + str(self.getNumberOfNodes()) +"\n"
-        toStr += "nodes = {\n"
-        for node in self.nodes:
-            toStr += str(node) + " "
-        toStr += "\n}\n"
-        toStr += "number of edges: " + str(self.getNumberOfEdges()) + "\n"
-        toStr += "edges = {\n"
-        for edge in self.edges:
-            toStr += str(edge) + " "
-        toStr += "\n}\n"
-        toStr += "}\n"
-        return toStr
-        
-
             
         
         

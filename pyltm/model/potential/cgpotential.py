@@ -16,7 +16,9 @@ class CGPotential(Potential):
 
     def __init__(self, jointVariables, discreteVariable, parameters=None):
         '''
-        Constructor
+        jointVariables: list of SingularContinuousVariables
+                        JointContinuousVariable will be converted to list of Singular
+        parameters: list of CGParameter
         '''
         if isinstance(jointVariables, JointContinuousVariable):
             jointVariables = list(jointVariables.variables())
@@ -129,7 +131,10 @@ class CGPotential(Potential):
         return constant
         
     def clone(self):
-        pass
+        continuousVars = list(self._continuousVariables)
+        discreteVar = self._discreteVariable
+        parameters = [param.clone() for param in self._parameters]
+        return CGPotential(continuousVars, discreteVar, parameters)
     
     def __str__(self):
         toStr = "CGPotential {\n"

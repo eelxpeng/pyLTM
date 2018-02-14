@@ -31,6 +31,7 @@ class JointContinuousVariable(ContinuousVariable):
         name = ",".join([v.name for v in self._variables])
         return name
     
+    @property
     def variables(self):
         return self._variables
             

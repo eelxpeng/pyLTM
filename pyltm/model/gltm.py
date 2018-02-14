@@ -17,4 +17,4 @@ class Gltm(TreeModel):
         super().__init__(name)
         
     def clone(self):
-        pass
+        return Gltm.createFromOther(self)

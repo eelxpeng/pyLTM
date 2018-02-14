@@ -1,0 +1,181 @@
+'''
+Created on 13 Feb 2018
+
+@author: Bryan
+'''
+from .natural_clique_tree import NaturalCliqueTree
+from .clique import Clique
+from ..model import Gltm
+from .evidence import Evidence
+import math
+
+class NaturalCliqueTreePropagation(object):
+    '''
+    natural clique tree propagation for inference
+    '''
+
+
+    def __init__(self, structure, focus=None):
+        '''
+        structure: Gltm
+        focus: Focus
+        '''
+        self._model = structure
+        self._tree = NaturalCliqueTree(structure)
+        self._evidences = Evidence()
+        self._loglikelihood = 0.
+        self._evidenceAbsorbed = False
+        self._messagesPassed = 0
+        if focus is not None:
+            self._focusSpecified = True
+            self._tree.setFocus(focus)
+            
+    def cliqueTree(self):
+        return self._tree
+    
+    def useModel(self, model):
+        assert isinstance(model, Gltm)
+        
+    def propagate(self):
+        '''
+        Perform propagation and returns the likelihood
+        '''
+        self._messagesPassed = 0
+        
+        # initialization
+        self.initializePotentials()
+        self.absorbEvidence()
+        
+        if self._focusSpecified:
+            self._evidenceAbsorbed = True
+            
+        self.collectMessage(self._tree.pivot)
+        self.distributeMessage(self._tree.pivot)
+        
+        # keep the potential of pivot under proper normalization
+        self._tree.pivot.normalize()
+        self._loglikelihood = self._tree.pivot.logNormalization()
+        
+        self.setSeparatorPotentials()
+        
+        self.release()
+        
+        if math.isinf(self._loglikelihood) or math.isnan(self._loglikelihood):
+            raise ValueError("ImpossibleEvidenceException")
+        
+    def initalizePotentials(self):
+        for node in self._tree.nodes:
+            node.reset()
+            
+        for node in self._model.nodes:
+            clique = self._tree.getClique(node.variable)
+            #since tree use child node as the key, only P(x1|y1) will be combined into C(x1,y1), not p(y1)
+            # unless it is the pivot. The root P(y1) will be combined to pivot clique
+            clique.combine(node.potential)
+            
+    def absorbEvidence(self):
+        '''
+        absorb continuous evidence one singular variable by one singular variable
+        should have a better way
+        '''
+        for variable in self._evidences.entrySet():
+            clique = self._tree.getClique(variable)
+            
+            # ignore variable not contained in this model
+            if clique is None:
+                continue
+            
+            if self._evidenceAbsorbed and not clique.focus():
+                continue
+            
+            clique.absorbEvidence()
+    
+    def collectMessage(self, sink, separator=None, source=None):
+        ctp = self
+        class CollectVisitor(Clique.NeighborVisitor):
+            def visit(self, separator1, neighbor):
+                ctp.collectMessage(sink, separator1, neighbor)
+        
+        if separator is None:
+            sink.visitNeighbors(CollectVisitor(None))
+        else:
+            if separator.getMessage(source) is None:
+                source.visitNeighbors(CollectVisitor(separator))
+            
+            self.sendMessage(source, separator, sink, False)
+        
+    def distributeMessage(self, source, separator=None, sink=None):
+        ctp = self
+        class DistributeVisitor(Clique.NeighborVisitor):
+            def visit(self, separator1, neighbor):
+                ctp.distributeMessage(source, separator1, neighbor)
+        
+        if separator is None:
+            sink.visitNeighbors(DistributeVisitor(None))
+        else:
+            if not sink.focus():
+                return
+            
+            self.sendMessage(source, separator, sink, True)
+            sink.visitNeighbors(DistributeVisitor(separator))
+            
+    def sendMessage(self, source, separator, sink, distributing):
+        '''
+        clique tree propagation has two pass: collecting and distributing
+        When collecting, separator should have no sink message
+        When distributing, separator should already have sink message
+            In such case, the source message should divide the sink message 
+        '''
+        sourceMessage = separator.getmessage(source)
+        if sourceMessage is None:
+            sourceMessage = source.computeMessage(separator)
+            separator.putMessage(source, sourceMessage)
+            
+        if distributing:
+            sinkMessage = separator.getMessage(sink)
+            assert sinkMessage is not None
+            if sinkMessage is not None:
+                sourceMessage = sourceMessage.clone()
+                sourceMessage.divide(sinkMessage)
+                
+        sink.combine(sourceMessage)
+        self._messagesPassed += 1
+        
+    def setSeparatorPotentials(self):
+        for sep in self._tree.separators():
+            sep.setPotential()
+            
+    def release(self, force=False):
+        for sep in self._tree.separators():
+            sep.release(force or not self._focusSpecified)
+            
+    @property
+    def model(self):
+        return self._model
+    @property
+    def evidences(self):
+        return self._evidences
+    
+    def use(self, evidence):
+        if evidence is None:
+            evidence = Evidence()
+        self._evidences = evidence
+        
+    @property
+    def loglikelihood(self):
+        return self._loglikelihood
+    @property
+    def messagePassed(self):
+        return self._messagesPassed
+    
+    
+    
+    
+        
+            
+            
+      
+        
+    
+        
+    

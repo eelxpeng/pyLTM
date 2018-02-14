@@ -18,6 +18,7 @@ class CPTParameter(Parameter):
     def __init__(self, dims):
         '''
         Constructor
+        dims: array of dimensions
         '''
         self.prob = np.ones(dims) * 1. / np.sum(dims)
         
@@ -62,7 +63,7 @@ class CPTParameter(Parameter):
             self.prob[:] = self.prob / constant
         return constant 
     
-    def copy(self):
+    def clone(self):
         newparameter = CPTParameter(self.prob.shape)
         newparameter.prob[:] = self.prob
         return newparameter
