@@ -15,7 +15,7 @@ class Parameter(metaclass=ABCMeta):
         pass
     
     @abstractmethod
-    def copy(self):
+    def clone(self):
         pass
 
     

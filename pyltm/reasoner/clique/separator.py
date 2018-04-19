@@ -4,6 +4,7 @@ Created on 13 Feb 2018
 @author: Bryan
 '''
 from .clique_tree_node import CliqueTreeNode
+from ..message import Message
 
 class Separator(CliqueTreeNode):
     '''
@@ -33,8 +34,12 @@ class Separator(CliqueTreeNode):
         return self._potential
     
     def putMessage(self, clique, message):
+        assert isinstance(message, Message)
         self._messages[clique] = message
         self._lastMessage = message
+        
+    def getMessage(self, clique):
+        return None if clique not in self._messages else self._messages[clique]
         
     def setPotential(self):
         '''

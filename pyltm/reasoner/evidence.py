@@ -17,7 +17,7 @@ class Evidence(object):
         Constructor
         '''
         if other is None:
-            self._entries = dict()
+            self._entries = dict()  # Variable: double
         else:
             self._entries = other.entries.copy()
             
@@ -45,6 +45,12 @@ class Evidence(object):
         
     def clone(self):
         return Evidence(self)
+    
+    def entrySet(self):
+        return self._entries
+    
+    def get(self, variable):
+        return self._entries[variable]
     
     def __str__(self):
         return str(self._entries)

@@ -4,7 +4,7 @@ Created on 13 Feb 2018
 @author: Bryan
 '''
 from .natural_clique_tree import NaturalCliqueTree
-from .clique import Clique
+from .clique import Clique, MixedClique
 from ..model import Gltm
 from .evidence import Evidence
 import math
@@ -26,6 +26,7 @@ class NaturalCliqueTreePropagation(object):
         self._loglikelihood = 0.
         self._evidenceAbsorbed = False
         self._messagesPassed = 0
+        self._focusSpecified = False
         if focus is not None:
             self._focusSpecified = True
             self._tree.setFocus(focus)
@@ -63,7 +64,7 @@ class NaturalCliqueTreePropagation(object):
         if math.isinf(self._loglikelihood) or math.isnan(self._loglikelihood):
             raise ValueError("ImpossibleEvidenceException")
         
-    def initalizePotentials(self):
+    def initializePotentials(self):
         for node in self._tree.nodes:
             node.reset()
             
@@ -78,17 +79,24 @@ class NaturalCliqueTreePropagation(object):
         absorb continuous evidence one singular variable by one singular variable
         should have a better way
         '''
-        for variable in self._evidences.entrySet():
-            clique = self._tree.getClique(variable)
-            
-            # ignore variable not contained in this model
-            if clique is None:
-                continue
-            
-            if self._evidenceAbsorbed and not clique.focus():
-                continue
-            
-            clique.absorbEvidence()
+#         for variable, value in self._evidences.entrySet():
+#             clique = self._tree.getClique(variable)
+#             
+#             # ignore variable not contained in this model
+#             if clique is None:
+#                 continue
+#             
+#             if self._evidenceAbsorbed and not clique.focus():
+#                 continue
+#             
+#             clique.absorbEvidence(variable, value)
+        for clique in self._tree.cliques:
+            if isinstance(clique, MixedClique):
+                # list of singular continuous variables
+                continuousVariables = clique.jointVariable.variables
+                entries = self._evidences.entrySet()
+                values = [entries[v] for v in continuousVariables]
+                clique.absorbEvidence(continuousVariables, values)
     
     def collectMessage(self, sink, separator=None, source=None):
         ctp = self
@@ -111,9 +119,9 @@ class NaturalCliqueTreePropagation(object):
                 ctp.distributeMessage(source, separator1, neighbor)
         
         if separator is None:
-            sink.visitNeighbors(DistributeVisitor(None))
+            source.visitNeighbors(DistributeVisitor(None))
         else:
-            if not sink.focus():
+            if not sink.focus:
                 return
             
             self.sendMessage(source, separator, sink, True)
@@ -126,7 +134,7 @@ class NaturalCliqueTreePropagation(object):
         When distributing, separator should already have sink message
             In such case, the source message should divide the sink message 
         '''
-        sourceMessage = separator.getmessage(source)
+        sourceMessage = separator.getMessage(source)
         if sourceMessage is None:
             sourceMessage = source.computeMessage(separator)
             separator.putMessage(source, sourceMessage)

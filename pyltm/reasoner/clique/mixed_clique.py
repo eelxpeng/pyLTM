@@ -25,9 +25,14 @@ class MixedClique(Clique):
     @property
     def discreteVariable(self):
         return self._discreteVariable
+    
     @property
     def jointVariable(self):
         return self._jointVariable
+    
+    @property
+    def discreteVariables(self):
+        return [self._discreteVariable]
     
     def potential(self):
         return self._potential.content if self._potential is not None else None
@@ -64,18 +69,19 @@ class MixedClique(Clique):
     def reset(self):
         self._potential = None
         
-    def combine(self, other, logNormalization):
+    def combine(self, other, logNormalization=0):
         """
         other: Potential
         """
         if isinstance(other, CGPotential):
             if self._potential is None:
-                self._potential = CliquePotential(other.clone(), logNormalization())
+                self._potential = CliquePotential(other.clone(), logNormalization)
             else:
                 self._potential.content.combine(other)
                 self._potential.logNormalization += logNormalization
         else:
             # other is CPTPotential
+            other = other.function()
             if self._potential is None:
                 cgpotential = CGPotential(self._jointVariable, self._discreteVariable)
                 self._potential = CliquePotential(cgpotential, logNormalization)
@@ -91,9 +97,9 @@ class MixedClique(Clique):
         return variables
         
     def __str__(self):
-        toStr = "" + self.__class__.__name__() + ": " 
-        toStr += " ".join([v.name for v in self._jointVariables])
-        toStr += " ".join([v.name for v in self._discreteVariable])
+        toStr = "" + self.__class__.__name__ + ": " 
+        toStr += " ".join([v.name for v in self._jointVariable.variables])
+        toStr += " " + self._discreteVariable.name + "\n"
         toStr += "neighbors={ " + " ".join([n.name for n in self.getNeighbors()]) + " }\n"
         
         if self.potential is not None:

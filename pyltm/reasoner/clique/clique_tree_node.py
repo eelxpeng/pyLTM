@@ -21,7 +21,7 @@ class CliqueTreeNode(UndirectedNode):
         pass
     
     def __str__(self):
-        toStr = "" + self.__class__.__name__() + ": " + " ".join([v.name for v in self.variables])
+        toStr = "" + self.__class__.__name__ + ": " + " ".join([v.name for v in self.variables]) + "\n"
         toStr += "neighbors={ " + " ".join([n.name for n in self.getNeighbors()]) + " }\n"
         
         if self.potential is not None:

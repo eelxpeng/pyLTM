@@ -5,6 +5,7 @@ Created on 12 Feb 2018
 '''
 from .parameter import Parameter
 import numpy as np
+import scipy.stats as stats
 
 class CGParameter(Parameter):
     '''
@@ -36,6 +37,13 @@ class CGParameter(Parameter):
         
     def setDiagonalTo(self, value):
         np.fill_diagonal(self.covar, value)
+        
+    def pdf(self, value):
+        '''
+        value: numpy array, same dimension as mu
+        return p*Normal(value | mu, covar)
+        '''
+        return self.p * stats.multivariate_normal.pdf(value, mean=self.mu, cov=self.covar)
         
     def __str__(self):
         toStr = self.__class__.__name__ + "\n"

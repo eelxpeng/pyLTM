@@ -68,6 +68,10 @@ class CPTParameter(Parameter):
         newparameter.prob[:] = self.prob
         return newparameter
     
+    def times(self, constant):
+        self.prob = self.prob*constant
+        return self
+    
     def __str__(self):
         return str(self.prob)
         

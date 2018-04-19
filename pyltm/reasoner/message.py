@@ -40,5 +40,6 @@ class Message(object):
             self.cptpotential.divide(divider.cptpotential)
             self.logNormalization -= divider.logNormalization
         
-    
+    def function(self):
+        return self.cptpotential
         

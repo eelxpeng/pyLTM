@@ -7,6 +7,8 @@ Created on 11 Feb 2018
 from .potential import Potential
 from ..parameter import CPTParameter
 from ..variable import Variable
+from sortedcontainers import SortedSet
+import numpy as np
 
 class CPTPotential(Potential):
     '''
@@ -91,14 +93,97 @@ class CPTPotential(Potential):
         return CPTPotential(variables, parameters)
     
     def function(self):
-        pass
+        return self
     
     def marginalize(self, variable):
-        pass
+        raise Exception("method not implemented.")
     
     def normalize(self, constant=None):
         return self._parameter.normalize(constant)
     
+    def getDimension(self):
+        return len(self._variables)
+        
+    def times(self, other):
+        if isinstance(other, float) or isinstance(other, int):
+            return self.parameter.times(other)
+        
+        other = other.function()
+        fDim = self.getDimension()
+        gDim = other.getDimension()
+        if fDim==0:
+            result = other.clone()
+            result.times(self.parameter.prob[0])
+            return result
+        elif gDim == 0:
+            result = self.clone()
+            result.times(other.parameter.prob[0])
+            return result
+        
+        # union of variables in this and other
+        var_prod = list(SortedSet(self.variables).union(other.variables))
+        
+        def getPermAxes(variables, subVars):
+            index = list(range(len(variables)))
+            transformAxes = []
+            reverseAxes = [0]*len(variables)
+            for i in range(len(subVars)):
+                j = variables.index(subVars[i])
+                transformAxes.append(j)
+                index.remove(j)
+                reverseAxes[j] = i
+            for i in index:
+                transformAxes.append(i)
+                reverseAxes[i] = len(transformAxes)-1
+            return transformAxes, reverseAxes
+        
+        ftransformAxes, freverseAxes = getPermAxes(var_prod, self.variables)
+        gtransformAxes, greverseAxes = getPermAxes(var_prod, other.variables)
+        newcpt = CPTPotential(var_prod)
+        # utilize the broadcast of numpy array
+        diff_axes = len(var_prod) - len(self.variables)
+        arr = self.parameter.prob
+        for i in range(diff_axes):
+            arr = np.expand_dims(arr, axis=-1)
+        fcpt = np.transpose(newcpt.parameter.prob, ftransformAxes)
+        fcpt[:] = arr
+        fcpt = np.transpose(fcpt, freverseAxes)
+        
+        diff_axes = len(var_prod) - len(other.variables)
+        arr = other.parameter.prob
+        for i in range(diff_axes):
+            arr = np.expand_dims(arr, axis=-1)
+        gcpt = np.transpose(newcpt.parameter.prob, gtransformAxes)
+        gcpt[:] = arr
+        gcpt = np.transpose(gcpt, greverseAxes)
+        
+        prod = fcpt*gcpt
+        newcpt.parameter.prob[:] = prod
+        
+        return newcpt
+    
+    def sumOut(self, variable):
+        '''
+        return CPTPotential with the specified variable summed out
+        '''
+        variableIndex = self._variables.index(variable)
+        summedArray = np.sum(self._parameter.prob, axis=variableIndex)
+        resultVariables = list(self._variables).pop(variableIndex)
+        cpt = CPTPotential(resultVariables)
+        cpt._parameter.prob = summedArray
+        return cpt
+    
+    def divide(self, other):
+        '''in place divide'''
+        if isinstance(other, float) or isinstance(other, int):
+            self._parameter.prob[:] = self._parameter.prob / other
+        else:
+            self._parameter.prob[:] = self._parameter.prob / other._parameter.prob
+    
+    @property
+    def parameter(self):
+        return self._parameter
+        
     @property
     def variables(self):
         return self._variables

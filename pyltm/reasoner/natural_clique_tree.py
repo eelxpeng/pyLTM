@@ -27,11 +27,12 @@ class NaturalCliqueTree(UndirectedGraph):
         
         if structure is not None:
             # construct the separators
-            for node in self.nodes:
+            for node in structure.nodes:
                 if node.getDegree()>1:
                     # only internal discrete nodes can have separator
                     # All leaf nodes are continuous
                     self.addSeparator(node)
+                    
             # construct the cliques by adding parent and child pair
             for edge in structure.edges:
                 childNode = edge.head
@@ -52,12 +53,12 @@ class NaturalCliqueTree(UndirectedGraph):
             # use the clique with the root variable as the pivot
             # find where to attach root P(Y), and attach to it
             rootNode = structure.getRoot()
-            self.setPivot(self._cliques[rootNode.variable])
+            self.setPivot(None if rootNode.variable not in self._cliques else self._cliques[rootNode.variable])
             # but if root variable does not as key in _clique
             # then use one of its children as the pivot
             # the root variable is associated with this pivot
             if self.pivot is None:
-                childNode = rootNode.getchildren()[0]
+                childNode = rootNode.children[0]
                 self.setPivot(self._cliques[childNode.variable])
                 self._cliques[rootNode.variable] = self.pivot
                 
@@ -77,6 +78,7 @@ class NaturalCliqueTree(UndirectedGraph):
         return self._separators[variable]
     
     def addClique(self, parent, child):
+        clique = None
         if isinstance(child, DiscreteBeliefNode):
             clique = DiscreteClique(self, self.newCliqueName(),
                             [child.variable, parent.variable])
@@ -85,6 +87,7 @@ class NaturalCliqueTree(UndirectedGraph):
                             child.variable, parent.variable)
         self.addNode(clique)
         self._cliques[child.variable] = clique
+        return clique
     
     def setPivot(self, clique):
         if self._pivot is not None:
@@ -114,6 +117,10 @@ class NaturalCliqueTree(UndirectedGraph):
     
     def separators(self):
         return self._separators.values()
+    
+    @property
+    def cliques(self):
+        return self._cliques.values()
     
     '''
     Currently not implementing Subtree and findMinimalSubtree

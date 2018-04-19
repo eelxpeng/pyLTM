@@ -18,8 +18,8 @@ class UndirectedGraph(AbstractGraph):
         assert not head.hasNeighbor(tail)
         edge = Edge(head, tail)
         self._edges.append(edge)
-        head.attachEdge(tail)
-        tail.attachEdge(head)
+        head.attachEdge(edge)
+        tail.attachEdge(edge)
         return edge
     
     def addNode(self, node):

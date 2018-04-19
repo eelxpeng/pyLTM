@@ -4,6 +4,7 @@ Created on 11 Feb 2018
 @author: Bryan
 '''
 from .potential import Potential
+from .cptpotential import CPTPotential
 from ..variable import Variable, JointContinuousVariable, DiscreteVariable
 from ..parameter import CGParameter
 import collections
@@ -21,7 +22,7 @@ class CGPotential(Potential):
         parameters: list of CGParameter
         '''
         if isinstance(jointVariables, JointContinuousVariable):
-            jointVariables = list(jointVariables.variables())
+            jointVariables = list(jointVariables.variables)
         elif isinstance(jointVariables, collections.Iterable):
             jointVariables = list(jointVariables)
         assert isinstance(jointVariables, list)
@@ -111,17 +112,22 @@ class CGPotential(Potential):
         return self.function()
         
     def function(self):
+        '''
+        return CPTPotential of discrete variable
+        '''
         p = np.zeros(self.size)
         for i in range(self.size):
             p[i] = self._parameters[i].p
-        return p
+        cpt = CPTPotential(self._discreteVariable)
+        cpt._parameter.prob = p
+        return cpt
     
-    def multiply(self, p):
+    def multiply(self, othercpt):
         """
-        p: array like
+        othercpt: CPTPotential. Must be 1-d
         """
         for i in range(self.size):
-            self._parameters[i].p = p[i]
+            self._parameters[i].p = othercpt._parameter.prob[i]
         
     def normalize(self, constant=None):
         if constant is None:
@@ -129,6 +135,21 @@ class CGPotential(Potential):
         for i in range(self.size):
             self._parameters[i].p /= constant
         return constant
+    
+    def absorbEvidence(self, variables, values):
+        '''
+        taking list of singular continous variables, and list of values
+        use multivariate normal distribution to get logprob
+        '''
+        index = [variables.index(v) for v in self._continuousVariables]
+        synced_values = np.array(values)[index]
+        for i in range(self.size):
+            self._parameters[i].p = self._parameters[i].pdf(synced_values)
+            dim = len(synced_values)
+#             self._parameters[i].setEntries(synced_values, np.zeros(dim, dim))
+            self._parameters[i].mu[:] = synced_values
+            self._parameters[i].covar[:] = np.zeros((dim, dim))
+        return 0
         
     def clone(self):
         continuousVars = list(self._continuousVariables)

@@ -62,7 +62,7 @@ class AbstractGraph(metaclass=ABCMeta):
         return len(self._edges)
     
     def __str__(self):
-        toStr = "" + self.__class__.__name__() +"{\n"
+        toStr = "" + self.__class__.__name__ +"{\n"
         toStr += "number of nodes: " + str(self.getNumberOfNodes()) +"\n"
         toStr += "nodes = {\n"
         for node in self.nodes:

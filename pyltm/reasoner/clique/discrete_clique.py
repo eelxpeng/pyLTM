@@ -49,14 +49,14 @@ class DiscreteClique(Clique):
                 continue
             if retainingVariables is not None and variable in retainingVariables:
                 continue
-            cptpotential.sumOut(variable)
+            cptpotential = cptpotential.sumOut(variable)
         constant = self.logNormalization() if multiplier is None else self.logNormalization()+multiplier.logNormalization()
         return Message(cptpotential, constant)
         
     def reset(self):
         self._potential = None
     
-    def combine(self, other, logNormalization):
+    def combine(self, other, logNormalization=0):
         """
         other: Potential
         """
@@ -64,6 +64,7 @@ class DiscreteClique(Clique):
             cptpotential = other.clone()
             self._potential = CliquePotential(cptpotential, logNormalization)
         else:
+            other = other.function()
             newcpt = self._potential.content.times(other)
             self._potential = CliquePotential(newcpt, self.logNormalization()+logNormalization)
             

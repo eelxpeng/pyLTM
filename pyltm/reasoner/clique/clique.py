@@ -33,8 +33,8 @@ class Clique(CliqueTreeNode):
         Constructor
         '''
         super().__init__(tree, name)
-        self.focus = True
-        self.pivot = False
+        self._focus = True
+        self._pivot = False
         self._potential = None
         
     @abstractmethod
@@ -76,14 +76,17 @@ class Clique(CliqueTreeNode):
         
     @property
     def focus(self):
-        return self.focus
+        return self._focus
+    @property
+    def pivot(self):
+        return self._pivot
     
     def setPivot(self, pivot=True):
-        self.pivot = pivot
+        self._pivot = pivot
         
     def isPivot(self):
-        return self.pivot
+        return self._pivot
     
     def normalize(self, constant=None):
-        constant = self.potential().normalize(constant)
+        constant = self.potential.normalize(constant)
         self.addLogNormalization(math.log(constant))

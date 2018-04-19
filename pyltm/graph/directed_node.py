@@ -28,7 +28,8 @@ class DirectedNode(AbstractNode):
         
     @property
     def children(self):
-        return self._children
+        return list(self._children.keys())
+    
     @property
     def parents(self):
         return self._parents
