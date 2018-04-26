@@ -87,6 +87,30 @@ class BayesNet(DirectedAcyclicGraph):
             return self._variables[variable]
         else:
             return self._names[variable]
+        
+    def removeNode(self, node):
+        super().removeNode(node)
+        self._variables.pop(node.variable)
+        self.expireLoglikelihoods()
+        
+    def combine(self, connectNewNode, nodes):
+        if len(nodes)<2:
+            return nodes[0]
+        parents = nodes[0].parents
+        children = nodes[0].children
+        
+        variables = []
+        for node in nodes:
+            variables += node.variable.variables
+            self.removeNode(node)
+        jointvar = JointContinuousVariable(variables)
+        newnode = self.addNode(jointvar)
+        if connectNewNode:
+            for parent in parents:
+                self.addEdge(newnode, parent)
+            for child in children:
+                self.addEdge(child, newnode)
+        return newnode
     
     def __str__(self):
         toStr = "BayesNet " + self._name + " {\n"

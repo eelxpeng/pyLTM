@@ -19,8 +19,8 @@ bif_grammar = r"""
     type : CONTINUOUS | DISCRETE
     num_states : NUMBER
     state : STRING
-    child : variable_name
-    parent : variable_name
+    child : (variable_name)+
+    parent : (variable_name)+
     table : "table" (NUMBER)+
     state_prob : "(" state ")" (NUMBER)+ ";"
     
@@ -92,24 +92,32 @@ class BifParser:
             node.potential.setCells([variable], prob)
             
         if t.data == "nonroot_prob":
-            child = t.children[0].children[0].children[0].value
-            child = remove_quote(child)
+            childins = t.children[0].children
+            children = []
+            for ins in childins:
+                child = ins.children[0].value
+                child = remove_quote(child)
+                children.append(child)
             parent = t.children[1].children[0].children[0].value
             parent = remove_quote(parent)
             
-            childnode = self.net.getNode(child)
+            childnodes = [self.net.getNode(child) for child in children]
+            # only one parent
             parentnode = self.net.getNode(parent)
-            self.net.addEdge(childnode, parentnode)
             
             prob = []
             for ins in t.children[2:]:
                 state_prob = read_row(ins.children[1:])
                 prob.append(state_prob)
             prob = np.array(prob)
-            if isinstance(childnode, DiscreteBeliefNode):
-                childnode.potential.setCells([parentnode.variable, childnode.variable], prob)
-            if isinstance(childnode, ContinuousBeliefNode):
-                dim = len(childnode.variable.variables)
+            if isinstance(childnodes[0], DiscreteBeliefNode):
+                for childnode in childnodes:
+                    self.net.addEdge(childnode, parentnode)
+                    childnode.potential.setCells([parentnode.variable, childnode.variable], prob)
+            if isinstance(childnodes[0], ContinuousBeliefNode):
+                newnode = self.net.combine(True, childnodes)
+                self.net.addEdge(newnode, parentnode)
+                dim = len(newnode.variable.variables)
                 mus = prob[:, :dim]
                 rest = prob[:, dim:]
                 covs = []
@@ -117,7 +125,7 @@ class BifParser:
                     cov = row.reshape((1, dim, dim))
                     covs.append(cov)
                 covs = np.concatenate(covs, axis=0)
-                childnode.potential.setEntries(mus, covs)
+                newnode.potential.setEntries(mus, covs)
         
 if __name__=="__main__":
     bifparser = BifParser()

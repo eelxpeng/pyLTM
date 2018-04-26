@@ -39,6 +39,18 @@ class AbstractGraph(metaclass=ABCMeta):
             return node in self._names
         else:
             raise ValueError("Argument to Abstractgraph.containsNode error!")
+    
+    def removeNode(self, node):
+        assert self.containsNode(node)
+        edges = node.getEdges()
+        for edge in edges:
+            self.removeEdge(edge)
+        self._nodes.remove(node)
+        self._names.pop(node.name)
+        
+    @abstractmethod
+    def removeEdge(self, edge):
+        pass
         
     @property
     def edges(self):
