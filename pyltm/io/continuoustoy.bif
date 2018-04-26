@@ -1,0 +1,28 @@
+network "BayesNetToy" {
+}
+
+variable "x" {
+	type continuous;
+}
+
+variable "z" {
+	type discrete[2] { "state0" "state1" };
+}
+
+variable "y" {
+	type discrete[2] { "state0" "state1" };
+}
+
+probability ("x" | "z") {
+	("state0") 0.0 1.0;
+	("state1") 4.0 4.0;
+}
+
+probability ("z" | "y") {
+	("state0") 0.25 0.25;
+	("state1") 0.25 0.25;
+}
+
+probability ("y") {
+	table 0.5 0.5;
+}

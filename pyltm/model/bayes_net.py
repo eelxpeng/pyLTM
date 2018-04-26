@@ -83,7 +83,10 @@ class BayesNet(DirectedAcyclicGraph):
         return node
     
     def getNode(self, variable):
-        return self._variables[variable]
+        if isinstance(variable, Variable):
+            return self._variables[variable]
+        else:
+            return self._names[variable]
     
     def __str__(self):
         toStr = "BayesNet " + self._name + " {\n"

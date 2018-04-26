@@ -40,7 +40,7 @@ class DirectedNode(AbstractNode):
     def getParent(self):
         if self.isRoot():
             return None
-        return self._parents.keys()[0]
+        return list(self._parents.keys())[0]
     
     
         
