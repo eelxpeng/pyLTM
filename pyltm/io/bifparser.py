@@ -19,7 +19,7 @@ bif_grammar = r"""
     type : CONTINUOUS | DISCRETE
     num_states : NUMBER
     state : STRING
-    child : (variable_name)+
+    child : variable_name ("," variable_name)*
     parent : (variable_name)+
     table : "table" (NUMBER)+
     state_prob : "(" state ")" (NUMBER)+ ";"
