@@ -168,8 +168,9 @@ class CPTPotential(Potential):
         '''
         variableIndex = self._variables.index(variable)
         summedArray = np.sum(self._parameter.prob, axis=variableIndex)
-        resultVariables = list(self._variables).pop(variableIndex)
-        cpt = CPTPotential(resultVariables)
+        newvars = list(self._variables)
+        newvars.pop(variableIndex)
+        cpt = CPTPotential(newvars)
         cpt._parameter.prob = summedArray
         return cpt
     

@@ -14,12 +14,12 @@ from pyltm.data import ContinuousDatacase
 import numpy as np
 
 if __name__ == '__main__':
-    modelfile = "glass.bif"
-    varNames = ["RI","Na","Mg","Al","Si","K","Ca","Ba","Fe"]
-    data = [1.51793,12.79,3.5,1.12,73.03,0.64,8.77,0,0]
-#     modelfile = "continuoustoy.bif"
-#     varNames = ["x"]
-#     data = [0]
+#     modelfile = "glass.bif"
+#     varNames = ["RI","Na","Mg","Al","Si","K","Ca","Ba","Fe"]
+#     data = [1.51793,12.79,3.5,1.12,73.03,0.64,8.77,0,0]
+    modelfile = "continuoustoy.bif"
+    varNames = ["x"]
+    data = [0]
     
     bifparser = BifParser()
     net = bifparser.parse(modelfile)
