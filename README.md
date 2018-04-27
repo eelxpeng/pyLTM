@@ -1,6 +1,6 @@
 # pyLTM library
 
-This repository tries to provide Python library for Bayesian latent tree model. This imlementation is based on commonly used Python library such as numpy, scipy, etc.
+This repository tries to provide Python library for Bayesian latent tree model. This imlementation is based on commonly used Python library such as numpy, scipy, etc. The original java library with structure learning for latent tree models is [HLTA](https://github.com/kmpoon/hlta) and [Pouch latent tree model](https://github.com/kmpoon/pltm-east).
 
 The functionality implemented include
 * Gaussian latent tree model
