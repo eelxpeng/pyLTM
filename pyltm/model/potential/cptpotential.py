@@ -145,7 +145,7 @@ class CPTPotential(Potential):
         arr = self.parameter.prob
         for i in range(diff_axes):
             arr = np.expand_dims(arr, axis=-1)
-        fcpt = np.transpose(newcpt.parameter.prob, ftransformAxes)
+        fcpt = np.transpose(newcpt.parameter.prob.copy(), ftransformAxes)
         fcpt[:] = arr
         fcpt = np.transpose(fcpt, freverseAxes)
         
@@ -153,7 +153,7 @@ class CPTPotential(Potential):
         arr = other.parameter.prob
         for i in range(diff_axes):
             arr = np.expand_dims(arr, axis=-1)
-        gcpt = np.transpose(newcpt.parameter.prob, gtransformAxes)
+        gcpt = np.transpose(newcpt.parameter.prob.copy(), gtransformAxes)
         gcpt[:] = arr
         gcpt = np.transpose(gcpt, greverseAxes)
         

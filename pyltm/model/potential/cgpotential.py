@@ -34,7 +34,7 @@ class CGPotential(Potential):
         cardinality = 1 if self._discreteVariable is None else self._discreteVariable.getCardinality()
         self._parameters = [None]*cardinality
         for i in range(cardinality):
-            self._parameters[i] = CGParameter(1./cardinality, len(self._continuousVariables))
+            self._parameters[i] = CGParameter(1., len(self._continuousVariables))
     
     def get(self, index):
         return self._parameters[index]
