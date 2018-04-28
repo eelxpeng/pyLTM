@@ -36,3 +36,7 @@ loglikelihood = ctp.loglikelihood
 print("Loglikelihood: ", loglikelihood)
 
 ```
+
+# contributors
+* Xiaopeng Li
+* Jiqing Wen
