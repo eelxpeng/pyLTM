@@ -17,7 +17,8 @@ class Clique(CliqueTreeNode):
         Constructs this visitor by specifying an origin of visit. 
         The origin separator is skipped when enumerating the neighbor separators in the visit.
         """
-        def __init__(self, origin=None):
+        def __init__(self, ctp, origin=None):
+            self._ctp = ctp
             self._origin = origin
         
         @property

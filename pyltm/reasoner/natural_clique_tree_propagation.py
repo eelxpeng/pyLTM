@@ -99,33 +99,39 @@ class NaturalCliqueTreePropagation(object):
                 clique.absorbEvidence(continuousVariables, values)
     
     def collectMessage(self, sink, separator=None, source=None):
-        ctp = self
         class CollectVisitor(Clique.NeighborVisitor):
             def visit(self, separator1, neighbor):
-                ctp.collectMessage(sink, separator1, neighbor)
+                self._ctp.collectMessage(sink, separator1, neighbor)
+                
+        class CollectVisitorRecursive(Clique.NeighborVisitor):
+            def visit(self, separator1, neighbor):
+                self._ctp.collectMessage(source, separator1, neighbor)
         
         if separator is None:
-            sink.visitNeighbors(CollectVisitor(None))
+            sink.visitNeighbors(CollectVisitor(self, None))
         else:
             if separator.getMessage(source) is None:
-                source.visitNeighbors(CollectVisitor(separator))
+                source.visitNeighbors(CollectVisitorRecursive(self, separator))
             
             self.sendMessage(source, separator, sink, False)
         
     def distributeMessage(self, source, separator=None, sink=None):
-        ctp = self
         class DistributeVisitor(Clique.NeighborVisitor):
             def visit(self, separator1, neighbor):
-                ctp.distributeMessage(source, separator1, neighbor)
+                self._ctp.distributeMessage(source, separator1, neighbor)
+                
+        class DistributeVisitorRecursive(Clique.NeighborVisitor):
+            def visit(self, separator1, neighbor):
+                self._ctp.distributeMessage(sink, separator1, neighbor)
         
         if separator is None:
-            source.visitNeighbors(DistributeVisitor(None))
+            source.visitNeighbors(DistributeVisitor(self, None))
         else:
             if not sink.focus:
                 return
             
             self.sendMessage(source, separator, sink, True)
-            sink.visitNeighbors(DistributeVisitor(separator))
+            sink.visitNeighbors(DistributeVisitorRecursive(self, separator))
             
     def sendMessage(self, source, separator, sink, distributing):
         '''
