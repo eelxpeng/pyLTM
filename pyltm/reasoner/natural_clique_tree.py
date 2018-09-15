@@ -5,7 +5,7 @@ Created on 13 Feb 2018
 '''
 from ..graph import UndirectedGraph
 from ..model import DiscreteVariable, DiscreteBeliefNode, ContinuousBeliefNode
-from .clique import Separator, DiscreteClique, MixedClique
+from .clique import Clique, Separator, DiscreteClique, MixedClique
 
 class NaturalCliqueTree(UndirectedGraph):
     '''
@@ -120,7 +120,8 @@ class NaturalCliqueTree(UndirectedGraph):
     
     @property
     def cliques(self):
-        return self._cliques.values()
+        # return self._cliques.values()
+        return [node for node in self.nodes if isinstance(node, Clique)]
     
     '''
     Currently not implementing Subtree and findMinimalSubtree

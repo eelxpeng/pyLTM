@@ -4,3 +4,4 @@ from .gltm import Gltm
 from .node import *
 from .variable import *
 from .potential import *
+from .parameter import *

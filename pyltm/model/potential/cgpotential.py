@@ -29,6 +29,8 @@ class CGPotential(Potential):
         self._continuousVariables = jointVariables
         self._discreteVariable = discreteVariable
         self._parameters = parameters
+        if self._parameters is None:
+            self.resetParameters()
         
     def resetParameters(self):
         cardinality = 1 if self._discreteVariable is None else self._discreteVariable.getCardinality()
@@ -128,6 +130,15 @@ class CGPotential(Potential):
         """
         for i in range(self.size):
             self._parameters[i].p = othercpt._parameter.prob[i]
+            
+    def combine(self, other): 
+        assert(self.size == other.size);
+
+        for i in range(len(self._parameters)):
+            self._parameters[i].p *= other._parameters[i].p
+            self._parameters[i].mu[:] = other._parameters[i].mu
+            self._parameters[i].covar[:] = other._parameters[i].covar
+
         
     def normalize(self, constant=None):
         if constant is None:

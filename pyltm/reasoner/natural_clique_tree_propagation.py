@@ -182,6 +182,10 @@ class NaturalCliqueTreePropagation(object):
     def messagePassed(self):
         return self._messagesPassed
     
+    def getMarginal(self, variable):
+        return self._tree.getClique(variable).potential.marginalize(variable);
+
+    
     
     
     

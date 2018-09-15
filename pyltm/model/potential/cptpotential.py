@@ -101,6 +101,11 @@ class CPTPotential(Potential):
     def normalize(self, constant=None):
         return self._parameter.normalize(constant)
     
+    def normalizeOver(self, variable):
+        index = self._variables.index(variable)
+        constant = np.sum(self._parameter.prob, axis=index, keepdims=True)
+        self._parameter.prob[:] = self._parameter.prob / constant
+    
     def getDimension(self):
         return len(self._variables)
         

@@ -34,6 +34,7 @@ class MixedClique(Clique):
     def discreteVariables(self):
         return [self._discreteVariable]
     
+    @property
     def potential(self):
         return self._potential.content if self._potential is not None else None
     
