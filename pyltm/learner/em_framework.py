@@ -22,12 +22,12 @@ class EMFramework(object):
         model: Gltm
         '''
         self._model = model
-        self._ctp = NaturalCliqueTreePropagation(self._model)
         self.sufficientStatistics, self.batchSufficientStatistics = self.initializeSufficientStatistics(batch_size)
         
     def initializeSufficientStatistics(self, batch_size):
-        self._ctp.initializePotentials()
-        tree = self._ctp.cliqueTree()
+        ctp = NaturalCliqueTreePropagation(self._model)
+        ctp.initializePotentials()
+        tree = ctp.cliqueTree()
         sufficientStatistics = [None]*len(tree.nodes)
         batchSufficientStatistics = [None]*len(tree.nodes)
         for i in range(len(tree.nodes)):
@@ -50,6 +50,7 @@ class EMFramework(object):
         data: 2d numpy array
         varNames: list of string
         '''
+        ctp = NaturalCliqueTreePropagation(self._model)
         # set up evidence
         datacase = ContinuousDatacase.create(varNames)
         datacase.synchronize(self._model)
@@ -57,15 +58,15 @@ class EMFramework(object):
         for i in range(len(data)):
             datacase.putValues(data[i])
             evidence = datacase.getEvidence()
-            self._ctp.use(evidence)
-            self._ctp.propagate()
+            ctp.use(evidence)
+            ctp.propagate()
             
-            for j in range(len(self._ctp.cliqueTree().nodes)):
-                self.batchSufficientStatistics[j].add(self._ctp.cliqueTree().nodes[j].potential)
+            for j in range(len(ctp.cliqueTree().nodes)):
+                self.batchSufficientStatistics[j].add(ctp.cliqueTree().nodes[j].potential)
                 
         # construct variable to statisticMap
         variableStatisticMap = dict()
-        tree = self._ctp.cliqueTree()
+        tree = ctp.cliqueTree()
         for node in self._model.nodes:
             clique = tree.getClique(node.variable)
             index = tree.nodes.index(clique)
@@ -79,11 +80,14 @@ class EMFramework(object):
             if isinstance(node, ContinuousBeliefNode):
                 cgparameters = statistics.computePotential(node.variable)
                 for i in range(node.potential.size):
-                    node.potential.get(i).mu[:] = node.potential.get(i).mu + learning_rate * (cgparameters[i].mu - node.potential.get(i).mu)
-                    node.potential.get(i).covar[:] = node.potential.get(i).covar + learning_rate * (cgparameters[i].covar - node.potential.get(i).covar)
+                    node.potential.get(i).mu[:] = cgparameters[i].mu
+                    node.potential.get(i).covar[:] = cgparameters[i].covar
+                    # node.potential.get(i).mu[:] = node.potential.get(i).mu + learning_rate * (cgparameters[i].mu - node.potential.get(i).mu)
+                    # node.potential.get(i).covar[:] = node.potential.get(i).covar + learning_rate * (cgparameters[i].covar - node.potential.get(i).covar)
             elif isinstance(node, DiscreteBeliefNode):
                 cptparameter = statistics.computePotential(node.variable)
-                node.potential.parameter.prob[:] = node.potential.parameter.prob + learning_rate * (cptparameter.prob - node.potential.parameter.prob) 
+                node.potential.parameter.prob[:] = cptparameter.prob
+                # node.potential.parameter.prob[:] = node.potential.parameter.prob + learning_rate * (cptparameter.prob - node.potential.parameter.prob) 
     
     def stepwise_em_step(self, data, varNames, learning_rate):
         self.reset()
