@@ -74,7 +74,10 @@ class MixedClique(Clique):
         """
         other: Potential
         """
-        if isinstance(other, CGPotential):
+        if isinstance(other, Message):
+            self.combine(other.function(), other.logNormalization)
+            return
+        elif isinstance(other, CGPotential):
             if self._potential is None:
                 self._potential = CliquePotential(other.clone(), logNormalization)
             else:

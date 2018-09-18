@@ -32,6 +32,9 @@ bif_grammar = r"""
     CONTINUOUS : "continuous"
     DISCRETE : "discrete"
     
+    COMMENT : "//" /(.)+/
+    %ignore COMMENT
+    
     %import common.ESCAPED_STRING -> STRING
     %import common.SIGNED_NUMBER -> NUMBER
     %import common.WS

@@ -129,7 +129,7 @@ class CGPotential(Potential):
         othercpt: CPTPotential. Must be 1-d
         """
         for i in range(self.size):
-            self._parameters[i].p = othercpt._parameter.prob[i]
+            self._parameters[i].p *= othercpt._parameter.prob[i]
             
     def combine(self, other): 
         assert(self.size == other.size);

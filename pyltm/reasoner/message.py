@@ -28,9 +28,10 @@ class Message(object):
         """
         messages: list of Message
         """
-        cpt_list = [m.cptpotential for m in messages]
-        logProduct = sum([m.logNormalization for m in messages])
-        return Message(CPTPotential.computeProduct(cpt_list), logProduct)
+        raise Exception("computeProduct not implemented!")
+#         cpt_list = [m.cptpotential for m in messages]
+#         logProduct = sum([m.logNormalization for m in messages])
+#         return Message(CPTPotential.computeProduct(cpt_list), logProduct)
     
     def divide(self, divider):
         '''divider: Message'''

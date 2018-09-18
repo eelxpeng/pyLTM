@@ -60,6 +60,9 @@ class DiscreteClique(Clique):
         """
         other: Potential
         """
+        if isinstance(other, Message):
+            self.combine(other.function(), other.logNormalization)
+            return
         if self._potential is None:
             cptpotential = other.clone()
             self._potential = CliquePotential(cptpotential, logNormalization)
