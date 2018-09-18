@@ -184,7 +184,7 @@ class CPTPotential(Potential):
         if isinstance(other, float) or isinstance(other, int):
             self._parameter.prob[:] = self._parameter.prob / other
         else:
-            self._parameter.prob[:] = self._parameter.prob / other._parameter.prob
+            self._parameter.prob[:] = self._parameter.prob / np.maximum(other._parameter.prob, 1e-10)
     
     @property
     def parameter(self):

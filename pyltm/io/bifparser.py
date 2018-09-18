@@ -60,7 +60,7 @@ class BifParser:
         self.net = None
         for inst in tree.children:
             self.read_tree(inst)
-        print(str(self.net))
+        
         return self.net
             
     def read_tree(self, t):

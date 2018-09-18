@@ -28,17 +28,18 @@ class EMFramework(object):
         ctp = NaturalCliqueTreePropagation(self._model)
         ctp.initializePotentials()
         tree = ctp.cliqueTree()
-        sufficientStatistics = [None]*len(tree.nodes)
-        batchSufficientStatistics = [None]*len(tree.nodes)
-        for i in range(len(tree.nodes)):
-            if isinstance(tree.nodes[i], DiscreteClique):
-                sufficientStatistics[i] = DiscreteCliqueSufficientStatistics(tree.nodes[i], batch_size)
-                batchSufficientStatistics[i] = DiscreteCliqueSufficientStatistics(tree.nodes[i], batch_size)
-            elif isinstance(tree.nodes[i], MixedClique):
-                sufficientStatistics[i] = MixedCliqueSufficientStatistics(tree.nodes[i], batch_size)
-                batchSufficientStatistics[i] = MixedCliqueSufficientStatistics(tree.nodes[i], batch_size)
+        cliques = tree.cliques
+        sufficientStatistics = [None]*len(cliques)
+        batchSufficientStatistics = [None]*len(cliques)
+        for i in range(len(cliques)):
+            if isinstance(cliques[i], DiscreteClique):
+                sufficientStatistics[i] = DiscreteCliqueSufficientStatistics(cliques[i], batch_size)
+                batchSufficientStatistics[i] = DiscreteCliqueSufficientStatistics(cliques[i], batch_size)
+            elif isinstance(cliques[i], MixedClique):
+                sufficientStatistics[i] = MixedCliqueSufficientStatistics(cliques[i], batch_size)
+                batchSufficientStatistics[i] = MixedCliqueSufficientStatistics(cliques[i], batch_size)
             else:
-                raise ValueError("invalid clique type")
+                raise Exception("unknown type of clique")
         return sufficientStatistics, batchSufficientStatistics
         
     def reset(self):
@@ -51,6 +52,9 @@ class EMFramework(object):
         varNames: list of string
         '''
         ctp = NaturalCliqueTreePropagation(self._model)
+        tree = ctp.cliqueTree()
+        cliques = tree.cliques
+
         # set up evidence
         datacase = ContinuousDatacase.create(varNames)
         datacase.synchronize(self._model)
@@ -61,15 +65,14 @@ class EMFramework(object):
             ctp.use(evidence)
             ctp.propagate()
             
-            for j in range(len(ctp.cliqueTree().nodes)):
-                self.batchSufficientStatistics[j].add(ctp.cliqueTree().nodes[j].potential)
+            for j in range(len(cliques)):
+                self.batchSufficientStatistics[j].add(cliques[j].potential)
                 
         # construct variable to statisticMap
         variableStatisticMap = dict()
-        tree = ctp.cliqueTree()
         for node in self._model.nodes:
             clique = tree.getClique(node.variable)
-            index = tree.nodes.index(clique)
+            index = cliques.index(clique)
             variableStatisticMap[node.variable] = (self.sufficientStatistics[index], self.batchSufficientStatistics[index])
         return variableStatisticMap
     
