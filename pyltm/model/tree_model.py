@@ -43,4 +43,8 @@ class TreeModel(BayesNet):
         variables = [n.variable for n in leafs]
         return variables
     
+    def getInternalVariables(self):
+        internalNodes = self.getInternalNodes()
+        return [n.variable for n in internalNodes]
+    
     

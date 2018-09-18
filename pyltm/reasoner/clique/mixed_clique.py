@@ -4,7 +4,7 @@ Created on 12 Feb 2018
 @author: Bryan
 '''
 from .clique import Clique
-from ..clique_potential import CliquePotential
+from pyltm.reasoner.clique_potential.clique_potential import CliquePotential
 from ..message import Message
 from pyltm.model.potential.cgpotential import CGPotential
 

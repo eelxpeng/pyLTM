@@ -5,7 +5,7 @@ Created on 12 Feb 2018
 '''
 from .clique import Clique
 from ..message import Message
-from ..clique_potential import CliquePotential
+from pyltm.reasoner.clique_potential.clique_potential import CliquePotential
 
 class DiscreteClique(Clique):
     '''

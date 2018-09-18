@@ -37,6 +37,9 @@ class DirectedNode(AbstractNode):
     def isRoot(self):
         return len(self._parents) == 0
     
+    def isLeaf(self):
+        return len(self._children)==0
+    
     def getParent(self):
         if self.isRoot():
             return None
