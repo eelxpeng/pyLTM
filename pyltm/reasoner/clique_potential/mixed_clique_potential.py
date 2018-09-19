@@ -100,9 +100,9 @@ class MixedCliquePotential(CliquePotential):
         discreteVar = self._discreteVariable
         cgpotential = CGPotential(continuousVars, discreteVar)
         potential = MixedCliquePotential(cgpotential)
-        potential.p = self.p.clone()
-        potential.mu = self.mu.clone()
-        potential.covar = self.covar.clone()
+        potential.p = self.p.copy()
+        potential.mu = self.mu.copy()
+        potential.covar = self.covar.copy()
         potential.logNormalization = self.logNormalization
         return potential
 
