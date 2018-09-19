@@ -8,6 +8,7 @@ sys.path.append("..")
 
 import numpy as np
 import math
+import time
 from sklearn import cluster, datasets, mixture
 from itertools import cycle, islice
 import matplotlib.pyplot as plt
@@ -46,12 +47,14 @@ if __name__ == '__main__':
     num_epochs = 10
     em = EMFramework(net, batch_size)
     
+    start_time = time.time()
     for epoch in range(num_epochs):
         num_iters = int(math.floor(len(X))/batch_size)
         for i in range(num_iters):
             batchX = X[i*batch_size:min((i+1)*batch_size, len(X))]
             em.stepwise_em_step(batchX, varNames, learning_rate)
-    
+    elapsed_time = time.time() - start_time
+    print("Elapsed time", elapsed_time)
     print("After EM")
     print(net)
     
