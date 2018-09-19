@@ -46,7 +46,7 @@ class Separator(CliqueTreeNode):
         set the potential to the last message
         '''
         if self._lastMessage is not None:
-            self._potential = self._lastMessage.cptpotential.clone()
+            self._potential = self._lastMessage.potential.clone()
     
     @property
     def variables(self):

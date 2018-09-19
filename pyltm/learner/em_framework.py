@@ -59,14 +59,13 @@ class EMFramework(object):
         datacase = ContinuousDatacase.create(varNames)
         datacase.synchronize(self._model)
         
-        for i in range(len(data)):
-            datacase.putValues(data[i])
-            evidence = datacase.getEvidence()
-            ctp.use(evidence)
-            ctp.propagate()
+        datacase.putValues(data)
+        evidence = datacase.getEvidence()
+        ctp.use(evidence)
+        ctp.propagate()
             
-            for j in range(len(cliques)):
-                self.batchSufficientStatistics[j].add(cliques[j].potential)
+        for j in range(len(cliques)):
+            self.batchSufficientStatistics[j].add(cliques[j].potential)
                 
         # construct variable to statisticMap
         variableStatisticMap = dict()

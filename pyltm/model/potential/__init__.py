@@ -5,3 +5,4 @@ Created on 11 Feb 2018
 '''
 from .cptpotential import CPTPotential
 from .cgpotential import CGPotential
+from .potential import Potential

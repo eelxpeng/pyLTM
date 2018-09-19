@@ -4,9 +4,11 @@ Created on 12 Feb 2018
 @author: Bryan
 '''
 from .clique import Clique
-from pyltm.reasoner.clique_potential.clique_potential import CliquePotential
+from ..clique_potential import CliquePotential, MixedCliquePotential
 from ..message import Message
 from pyltm.model.potential.cgpotential import CGPotential
+from pyltm.reasoner.clique_potential.discrete_clique_potential import DiscreteCliquePotential
+from pyltm.model.potential.cptpotential import CPTPotential
 
 class MixedClique(Clique):
     '''
@@ -36,13 +38,9 @@ class MixedClique(Clique):
     
     @property
     def potential(self):
-        return self._potential.content if self._potential is not None else None
+        return self._potential
     
     def logNormalization(self):
-        return self._potential.logNormalization
-    
-    def addLogNormalization(self, logNormalization):
-        self._potential.logNormalization += logNormalization
         return self._potential.logNormalization
     
     def contains(self, variable):
@@ -53,18 +51,18 @@ class MixedClique(Clique):
         """
         potential: CGPotential
         """
-        self._potential = CliquePotential(potential)
+        self._potential = MixedCliquePotential(potential)
         
     def absorbEvidence(self, variable, value):
-        self._potential.logNormalization += self._potential.content.absorbEvidence(variable, value)
+        self._potential.absorbEvidence(variable, value)
         
     def computeMessage(self, separator, multiplier=None, retainingVariables=None):
         """
         Should only contain discrete variable of the separator
         Always retain the discrete variable and marginalize out continuous
         """
-        cptpotential = self._potential.content.marginalize(separator.variable)
-        message = Message(cptpotential, self._potential.logNormalization)
+        discreteCliquePotential = self._potential.marginalize(separator.variable)
+        message = Message(discreteCliquePotential)
         return message.times(multiplier) if multiplier is not None else message
     
     def reset(self):
@@ -75,23 +73,26 @@ class MixedClique(Clique):
         other: Potential
         """
         if isinstance(other, Message):
-            self.combine(other.function(), other.logNormalization)
+            self.combine(other.function())
             return
         elif isinstance(other, CGPotential):
             if self._potential is None:
-                self._potential = CliquePotential(other.clone(), logNormalization)
+                self._potential = MixedCliquePotential(other.clone(), logNormalization)
             else:
-                self._potential.content.combine(other)
-                self._potential.logNormalization += logNormalization
-        else:
+                other = MixedCliquePotential(other, logNormalization)
+                self._potential.combine(other)
+        elif isinstance(other, CPTPotential):
             # other is CPTPotential
             other = other.function()
             if self._potential is None:
                 cgpotential = CGPotential(self._jointVariable, self._discreteVariable)
-                self._potential = CliquePotential(cgpotential, logNormalization)
-                
-            self._potential.content.multiply(other)
-            self._potential.logNormalization += logNormalization
+                self._potential = MixedCliquePotential(cgpotential, logNormalization)
+            other = DiscreteCliquePotential(other, logNormalization)
+            self._potential.multiply(other)
+        elif isinstance(other, DiscreteCliquePotential):
+            self._potential.multiply(other)
+        else:
+            raise Exception("Invalid potential type!")
                 
         if self.pivot:
             self.normalize()

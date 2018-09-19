@@ -8,6 +8,7 @@ from .clique import Clique, MixedClique
 from ..model import Gltm
 from .evidence import Evidence
 import math
+import numpy as np
 
 class NaturalCliqueTreePropagation(object):
     '''
@@ -61,7 +62,7 @@ class NaturalCliqueTreePropagation(object):
         
         self.release()
         
-        if math.isinf(self._loglikelihood) or math.isnan(self._loglikelihood):
+        if np.isinf(self._loglikelihood).any() or np.isnan(self._loglikelihood).any():
             raise ValueError("ImpossibleEvidenceException")
         
     def initializePotentials(self):
@@ -94,8 +95,7 @@ class NaturalCliqueTreePropagation(object):
             if isinstance(clique, MixedClique):
                 # list of singular continuous variables
                 continuousVariables = clique.jointVariable.variables
-                entries = self._evidences.entrySet()
-                values = [entries[v] for v in continuousVariables]
+                values = self._evidences.getValues(continuousVariables)
                 clique.absorbEvidence(continuousVariables, values)
     
     def collectMessage(self, sink, separator=None, source=None):

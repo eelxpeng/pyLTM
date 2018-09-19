@@ -64,13 +64,6 @@ class Clique(CliqueTreeNode):
         if isinstance(potential, Message):
             potential = potential.potential
         pass
-        
-    @abstractmethod
-    def logNormalization(self):
-        pass
-    @abstractmethod
-    def addLogNormalization(self, logNormalization):
-        pass
     
     def setFocus(self, focus=True):
         self.focus = focus
@@ -89,5 +82,4 @@ class Clique(CliqueTreeNode):
         return self._pivot
     
     def normalize(self, constant=None):
-        constant = self.potential.normalize(constant)
-        self.addLogNormalization(math.log(constant))
+        self.potential.normalize(constant)

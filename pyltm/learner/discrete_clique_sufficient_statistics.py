@@ -3,6 +3,7 @@ Created on 12 Sep 2018
 
 @author: Bryan
 '''
+import numpy as np
 from .sufficient_statistics import SufficientStatistics
 from pyltm.model import CPTPotential
 
@@ -16,19 +17,20 @@ class DiscreteCliqueSufficientStatistics(SufficientStatistics):
         '''
         Constructor
         '''
-        self.statistics = node.potential.clone()
-        self.statistics.parameter.prob[:] = self.statistics.parameter.prob * batch_size 
+        self._variables = node.potential._variables
+        self.prob = node.potential.prob.copy() * batch_size
         
     def reset(self):
-        self.statistics.parameter.prob[:] = 0
+        self.prob[:] = 0
         
-    def add(self, potential, weight):
-        self.statistics.parameter.prob[:] += potential.parameter.prob * weight
+    def add(self, potential):
+        self.prob[:] += np.sum(potential.prob, axis=0)
         
-    def update(self, cptpotential, learning_rate):
-        self.statistics.parameter.prob[:] = self.statistics.parameter.prob + learning_rate * (
-            cptpotential.parameter.prob - self.statistics.parameter.prob)
+    def update(self, statistics, learning_rate):
+        self.prob[:] = self.prob + learning_rate * (statistics.prob - self.prob)
         
     def computePotential(self, variable):
-        self.statistics.normalizeOver(variable)
-        return self.statistics.parameter
+        cptpotential = CPTPotential(self._variables)
+        cptpotential.parameter.prob[:] = self.prob
+        cptpotential.normalizeOver(variable)
+        return cptpotential.parameter

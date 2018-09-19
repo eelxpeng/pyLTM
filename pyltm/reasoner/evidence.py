@@ -4,6 +4,7 @@ Created on 14 Feb 2018
 @author: Bryan
 '''
 import math
+import numpy as np
 import collections
 
 class Evidence(object):
@@ -33,13 +34,14 @@ class Evidence(object):
     def add(self, variable, value):
         if isinstance(variable, collections.Iterable):
             for i in range(len(variable)):
-                self.add(variable[i], value[i])
+                self.add(variable[i], value[:, i])
         else:
-            if math.isnan(value):
-                self._entries.pop(variable)
-            else:
-                self._entries[variable] = value
-                
+            self._entries[variable] = value
+    
+    def getValues(self, variables):
+        values = np.hstack([np.expand_dims(self._entries[v], axis=1) for v in variables])
+        return values
+    
     def clear(self):
         self._entries.clear()
         

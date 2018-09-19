@@ -5,7 +5,8 @@ Created on 12 Feb 2018
 '''
 from .clique import Clique
 from ..message import Message
-from pyltm.reasoner.clique_potential.clique_potential import CliquePotential
+from pyltm.reasoner.clique_potential import CliquePotential, DiscreteCliquePotential
+from pyltm.model import Potential, CPTPotential, CGPotential
 
 class DiscreteClique(Clique):
     '''
@@ -28,13 +29,10 @@ class DiscreteClique(Clique):
         return self._variables
     @property
     def potential(self):
-        return self._potential.content if self._potential is not None else None
+        return self._potential
     
     def logNormalization(self):
         return self._potential.logNormalization
-    
-    def addLogNormalization(self, logNormalization):
-        self._potential.logNormalization += logNormalization
         
     def contains(self, variable):
         return variable in self._variables
@@ -43,15 +41,14 @@ class DiscreteClique(Clique):
         """
         multiplier: Message from upstream
         """
-        cptpotential = self._potential.content if multiplier is None else self._potential.content.times(multiplier.cptpotential)
-        for variable in self._potential.content.variables:
+        cliquepotential = self._potential if multiplier is None else self._potential.times(multiplier.potential)
+        for variable in self._potential.variables:
             if variable is separator.variable:
                 continue
             if retainingVariables is not None and variable in retainingVariables:
                 continue
-            cptpotential = cptpotential.sumOut(variable)
-        constant = self.logNormalization() if multiplier is None else self.logNormalization()+multiplier.logNormalization()
-        return Message(cptpotential, constant)
+            cliquepotential = cliquepotential.sumOut(variable)
+        return Message(cliquepotential)
         
     def reset(self):
         self._potential = None
@@ -61,15 +58,20 @@ class DiscreteClique(Clique):
         other: Potential
         """
         if isinstance(other, Message):
-            self.combine(other.function(), other.logNormalization)
+            self.combine(other.function())
             return
         if self._potential is None:
             cptpotential = other.clone()
-            self._potential = CliquePotential(cptpotential, logNormalization)
-        else:
+            self._potential = DiscreteCliquePotential(cptpotential, logNormalization)
+        elif isinstance(other, Potential):
             other = other.function()
-            newcpt = self._potential.content.times(other)
-            self._potential = CliquePotential(newcpt, self.logNormalization()+logNormalization)
+            other = DiscreteCliquePotential(other, logNormalization)
+            self._potential = self._potential.times(other)
+        elif isinstance(other, CliquePotential):
+            other = other.function()
+            self._potential = self._potential.times(other)
+        else:
+            raise Exception("invalid potential type")
             
         if self.pivot:
             self.normalize()

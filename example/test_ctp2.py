@@ -16,7 +16,8 @@ import numpy as np
 if __name__ == '__main__':
     modelfile = "glass.bif"
     varNames = ["RI","Na","Mg","Al","Si","K","Ca","Ba","Fe"]
-    data = [1.51793,12.79,3.5,1.12,73.03,0.64,8.77,0,0]
+    data = np.array([[1.51793,12.79,3.5,1.12,73.03,0.64,8.77,0,0],
+                     [1.51643,12.16,3.52,1.35,72.89,0.57,8.53,0,0]])
 #     modelfile = "continuoustoy.bif"
 #     varNames = ["x"]
 #     data = [0]

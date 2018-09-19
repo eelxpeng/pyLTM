@@ -3,25 +3,25 @@ Created on 13 Feb 2018
 
 @author: Bryan
 '''
-from ..model import CPTPotential
+from .clique_potential import DiscreteCliquePotential
+
 class Message(object):
     '''
     classdocs
     '''
 
 
-    def __init__(self, cptpotential, logNormalization):
+    def __init__(self, potential):
         '''
         Constructor
         '''
-        self.cptpotential = cptpotential
-        self.logNormalization = logNormalization
+        self.potential = potential
         
     def clone(self):
-        return Message(self.cptpotential.clone(), self.logNormalization)
+        return Message(self.potential.clone())
     
     def times(self, message):
-        return Message(self.cptpotential.times(message.cptpotential), self.logNormalization+message.logNormalization)
+        return Message(self.potential.times(message.potential))
     
     @staticmethod
     def computeProduct(messages):
@@ -35,12 +35,11 @@ class Message(object):
     
     def divide(self, divider):
         '''divider: Message'''
-        if isinstance(divider, CPTPotential):
-            self.cptpotential.divide(divider)
+        if isinstance(divider, DiscreteCliquePotential):
+            self.potential.divide(divider)
         elif isinstance(divider, Message):
-            self.cptpotential.divide(divider.cptpotential)
-            self.logNormalization -= divider.logNormalization
+            self.potential.divide(divider.potential)
         
     def function(self):
-        return self.cptpotential
+        return self.potential
         

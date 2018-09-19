@@ -67,14 +67,15 @@ if __name__ == '__main__':
             break
     print(targetVar)
     y_pred = []
-    for i in range(len(X)):
-        datacase.putValues(X[i])
-        evidence = datacase.getEvidence()
+    
+    datacase.putValues(X)
+    evidence = datacase.getEvidence()
         
-        ctp.use(evidence)
-        ctp.propagate()
-        latent = ctp.getMarginal(targetVar).parameter.prob
-        y_pred.append(np.argmax(latent))
+    ctp.use(evidence)
+    ctp.propagate()
+    latent = ctp.getMarginal(targetVar).prob
+    y_pred = np.argmax(latent, axis=1)
+    
     print(y_pred)
     colors = np.array(list(islice(cycle(['#377eb8', '#ff7f00', '#4daf4a',
                                         '#f781bf', '#a65628', '#984ea3',
