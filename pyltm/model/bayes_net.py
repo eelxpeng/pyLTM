@@ -112,6 +112,9 @@ class BayesNet(DirectedAcyclicGraph):
                 self.addEdge(child, newnode)
         return newnode
     
+    def getName(self):
+        return self._name
+    
     def __str__(self):
         toStr = "BayesNet " + self._name + " {\n"
         toStr += "number of nodes: " + str(self.getNumberOfNodes()) +"\n"

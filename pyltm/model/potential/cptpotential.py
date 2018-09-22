@@ -167,6 +167,27 @@ class CPTPotential(Potential):
         
         return newcpt
     
+    def getCells(self, variables):
+        for v in variables:
+            assert(self.contains(v.name))
+        assert(len(variables)==len(self._variables))
+        def getPermAxes(variables, subVars):
+            index = list(range(len(variables)))
+            transformAxes = []
+            reverseAxes = [0]*len(variables)
+            for i in range(len(subVars)):
+                j = variables.index(subVars[i])
+                transformAxes.append(j)
+                index.remove(j)
+                reverseAxes[j] = i
+            for i in index:
+                transformAxes.append(i)
+                reverseAxes[i] = len(transformAxes)-1
+            return transformAxes, reverseAxes
+        ftransformAxes, _ = getPermAxes(variables, self.variables)
+        fcpt = np.transpose(self.parameter.prob.copy(), ftransformAxes)
+        return fcpt
+        
     def sumOut(self, variable):
         '''
         return CPTPotential with the specified variable summed out
