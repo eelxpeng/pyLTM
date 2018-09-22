@@ -3,6 +3,7 @@ Created on 18 Sep 2018
 
 @author: Bryan
 '''
+import pdb
 import numpy as np
 import scipy.stats as stats
 from .clique_potential import CliquePotential
@@ -58,9 +59,12 @@ class MixedCliquePotential(CliquePotential):
             else:
                 constant = np.sum(self.p)
                 normalizeConstant = constant
-
-        self.p /= constant
-        self.logNormalization += np.log(normalizeConstant) + self.logNormalization
+        try:
+            self.p /= constant
+            self.logNormalization += np.log(normalizeConstant) + self.logNormalization
+        except:
+            pdb.set_trace()
+            raise Exception("error!")
         
     def absorbEvidence(self, variables, values):
         '''
