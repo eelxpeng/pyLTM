@@ -10,6 +10,7 @@ from pyltm.reasoner import DiscreteClique, MixedClique
 from .discrete_clique_sufficient_statistics import DiscreteCliqueSufficientStatistics
 from .mixed_clique_sufficient_statistics import MixedCliqueSufficientStatistics
 from pyltm.model.parameter import cptparameter
+from .covariance_constrainer import CovarianceConstrainer
 
 class EMFramework(object):
     '''
@@ -17,12 +18,13 @@ class EMFramework(object):
     '''
 
 
-    def __init__(self, model, batch_size):
+    def __init__(self, model, batch_size, covariance_lower_bound=0.01):
         '''
         model: Gltm
         '''
         self._model = model
         self.sufficientStatistics, self.batchSufficientStatistics = self.initializeSufficientStatistics(batch_size)
+        self.covariance_constrainer = CovarianceConstrainer(lower_bound=covariance_lower_bound)
         
     def initializeSufficientStatistics(self, batch_size):
         ctp = NaturalCliqueTreePropagation(self._model)
@@ -86,6 +88,7 @@ class EMFramework(object):
                     node.potential.get(i).covar[:] = cgparameters[i].covar
                     # node.potential.get(i).mu[:] = node.potential.get(i).mu + learning_rate * (cgparameters[i].mu - node.potential.get(i).mu)
                     # node.potential.get(i).covar[:] = node.potential.get(i).covar + learning_rate * (cgparameters[i].covar - node.potential.get(i).covar)
+                self.covariance_constrainer.adjust(node.potential)
             elif isinstance(node, DiscreteBeliefNode):
                 cptparameter = statistics.computePotential(node.variable)
                 node.potential.parameter.prob[:] = cptparameter.prob
