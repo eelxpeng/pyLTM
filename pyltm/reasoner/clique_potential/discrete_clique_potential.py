@@ -154,7 +154,7 @@ class DiscreteCliquePotential(CliquePotential):
         cpt = CPTPotential(newvars)
         cliquepotential = DiscreteCliquePotential(cpt)
         cliquepotential.prob = summedArray
-        cliquepotential.logNormalization = self.logNormalization
+        cliquepotential.logNormalization = self.logNormalization.copy()
         return cliquepotential
     
     def clone(self):
