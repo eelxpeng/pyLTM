@@ -72,12 +72,16 @@ class MixedCliquePotential(CliquePotential):
         synced_values = values[:, index]
         num, _ = synced_values.shape
         batchp = np.zeros((num, self.size))
+#         for i in range(self.size):
+#             batchp[:, i] = self.p[i]*stats.multivariate_normal.pdf(synced_values, mean=self.mu[i], cov=self.covar[i])
         for i in range(self.size):
-            batchp[:, i] = self.p[i]*stats.multivariate_normal.pdf(synced_values, mean=self.mu[i], cov=self.covar[i])
-        self.p = batchp
+            batchp[:, i] = self.p[i]*stats.multivariate_normal.logpdf(synced_values, mean=self.mu[i], cov=self.covar[i])
+        maxlogP = np.max(batchp, axis=1, keepdims=True)
+        self.p = np.exp(batchp - maxlogP)
+        self.logNormalization += np.squeeze(maxlogP, axis=1)
         self.mu = np.repeat(np.expand_dims(synced_values, axis=1), self.size, axis=1)
         self.covar = np.zeros((num, self.size, self.dimension, self.dimension))
-        return 0
+        return maxlogP
     
     def marginalize(self, variable):
         """
@@ -93,6 +97,7 @@ class MixedCliquePotential(CliquePotential):
         '''
         cpt = DiscreteCliquePotential(CPTPotential(self._discreteVariable))
         cpt.prob = self.p.copy()
+        cpt.logNormalization = self.logNormalization.copy()
         return cpt
     
     def clone(self):
