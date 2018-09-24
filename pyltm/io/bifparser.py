@@ -56,7 +56,8 @@ class BifParser:
         self.bif_parser = Lark(bif_grammar, start='model', lexer='standard')
         
     def parse(self, filename):
-        tree = self.bif_parser.parse(open(filename).read())
+        with open(filename) as fid:
+            tree = self.bif_parser.parse(fid.read())
         self.net = None
         for inst in tree.children:
             self.read_tree(inst)
