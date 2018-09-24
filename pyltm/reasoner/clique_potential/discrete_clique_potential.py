@@ -113,7 +113,12 @@ class DiscreteCliquePotential(CliquePotential):
         return self
     
     def marginalize(self, variable):
-        raise Exception("method not implemented.")
+        assert(variable in self._variables)
+        cpt = self
+        for var in self._variables:
+            if var != variable:
+                cpt = cpt.sumOut(var)
+        return cpt
     
     def normalize(self, constant=None):
         if constant is None:
