@@ -29,8 +29,12 @@ class DiscreteCliqueSufficientStatistics(SufficientStatistics):
     def update(self, statistics, learning_rate):
         self.prob[:] = self.prob + learning_rate * (statistics.prob - self.prob)
         
-    def computePotential(self, variable):
+    def computePotential(self, variable, parent):
         cptpotential = CPTPotential(self._variables)
         cptpotential.parameter.prob[:] = self.prob
+        # sum out any irrelevant variables
+        for v in self._variables:
+            if v!=variable and (parent is None or v!=parent):
+                cptpotential = cptpotential.sumOut(v)
         cptpotential.normalizeOver(variable)
         return cptpotential.parameter

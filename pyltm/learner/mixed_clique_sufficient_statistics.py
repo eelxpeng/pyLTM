@@ -76,7 +76,7 @@ class MixedCliqueSufficientStatistics(SufficientStatistics):
         self.mu[:] = self.mu + learning_rate * (batchStatistics.mu - self.mu)
         self.covar[:] = self.covar + learning_rate * (batchStatistics.covar - self.covar)
         
-    def computePotential(self, variable):
+    def computePotential(self, variable, parent):
         if isinstance(variable, JointContinuousVariable):
             parameters = [None]*self.size
             for i in range(self.size):

@@ -22,12 +22,16 @@ class CPTPotential(Potential):
         super().__init__()
         if isinstance(variables, Variable):
             variables = [variables]
-        self._variables = list(variables)    # save the variables involved
+        # self._variables = list(variables)    # save the variables involved
+        self._variables = list(SortedSet(variables))
         if parameter is None:
             # initialize the table to uniform
-            self._parameter = CPTParameter([v.getCardinality() for v in variables])
+            self._parameter = CPTParameter([v.getCardinality() for v in self._variables])
         else:
-            self._parameter = parameter
+            transpose_axis = [variables.index(v) for v in self._variables]
+            param = parameter.clone()
+            param.prob = np.transpose(param.prob, transpose_axis)
+            self._parameter = param
         
     def addParentVariable(self, variable):
         return self.addVariable(variable)
@@ -41,9 +45,19 @@ class CPTPotential(Potential):
         g such that g(X, y) = f(X)
         """
         assert not self.contains(variable.name)
+        # search for the index to put variable
+        index = 0
+        while index<len(self.variables):
+            if variable<self._variables[index]:
+                break
+            else:
+                index += 1
+#         for index in range(len(self.variables)):
+#             if variable<self._variables[index]:
+#                 break
+        self._variables.insert(index, variable)
         cardinality = variable.getCardinality()
-        self._variables.append(variable)
-        self._parameter.expand_dim(-1, cardinality)
+        self._parameter.expand_dim(index, cardinality)
         return self
     
     def removeParentVariable(self, variable):

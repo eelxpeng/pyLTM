@@ -82,7 +82,7 @@ class EMFramework(object):
             statistics, batchStatistics = variableStatisticMap[node.variable]
             statistics.update(batchStatistics, learning_rate)
             if isinstance(node, ContinuousBeliefNode):
-                cgparameters = statistics.computePotential(node.variable)
+                cgparameters = statistics.computePotential(node.variable, None if node.getParent() is None else node.getParent().variable)
                 for i in range(node.potential.size):
                     node.potential.get(i).mu[:] = cgparameters[i].mu
                     node.potential.get(i).covar[:] = cgparameters[i].covar
@@ -90,7 +90,7 @@ class EMFramework(object):
                     # node.potential.get(i).covar[:] = node.potential.get(i).covar + learning_rate * (cgparameters[i].covar - node.potential.get(i).covar)
                 self.covariance_constrainer.adjust(node.potential)
             elif isinstance(node, DiscreteBeliefNode):
-                cptparameter = statistics.computePotential(node.variable)
+                cptparameter = statistics.computePotential(node.variable, None if node.getParent() is None else node.getParent().variable)
                 node.potential.parameter.prob[:] = cptparameter.prob
                 # node.potential.parameter.prob[:] = node.potential.parameter.prob + learning_rate * (cptparameter.prob - node.potential.parameter.prob) 
     
