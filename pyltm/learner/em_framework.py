@@ -75,7 +75,7 @@ class EMFramework(object):
             clique = tree.getClique(node.variable)
             index = cliques.index(clique)
             variableStatisticMap[node.variable] = (self.sufficientStatistics[index], self.batchSufficientStatistics[index])
-        return variableStatisticMap
+        return variableStatisticMap, ctp.loglikelihood
     
     def stepwise_m_step(self, variableStatisticMap, learning_rate):
         for node in self._model.nodes:
@@ -96,8 +96,9 @@ class EMFramework(object):
     
     def stepwise_em_step(self, data, varNames, learning_rate):
         self.reset()
-        variableStatisticMap = self.stepwise_e_step(data, varNames)
+        variableStatisticMap, loglikelihood = self.stepwise_e_step(data, varNames)
         self.stepwise_m_step(variableStatisticMap, learning_rate)
+        return loglikelihood
         
         
         

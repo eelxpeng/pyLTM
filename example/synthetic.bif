@@ -1,0 +1,56 @@
+network "Synthetic" {
+}
+
+variable "z1" {
+	type continuous;
+}
+
+variable "z2" {
+	type continuous;
+}
+
+variable "z3" {
+	type continuous;
+}
+
+variable "z4" {
+	type continuous;
+}
+
+variable "y1" {
+	type discrete[2] { "state0" "state1" };
+}
+
+variable "y2" {
+	type discrete[2] { "state0" "state1" };
+}
+
+probability ("z1" | "y1") {
+	("state0") 0 1;
+	("state1") 0 1;
+}
+
+probability ("z2" | "y1") {
+	("state0") 0 1;
+	("state1") 0 1;
+}
+
+probability ("z3" | "y2") {
+	("state0") 0 1;
+	("state1") 0 1;
+}
+
+probability ("z4" | "y2") {
+	("state0") 0 1;
+	("state1") 0 1;
+}
+
+probability ("y1") {
+	table 0.5 0.5;
+}
+
+probability ("y2" | "y1") {
+	("state0") 0.5 0.5;
+	("state1") 0.5 0.5;
+}
+
