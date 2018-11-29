@@ -147,7 +147,7 @@ class NaturalCliqueTreePropagation(object):
             
         if distributing:
             sinkMessage = separator.getMessage(sink)
-            assert sinkMessage is not None
+            # assert sinkMessage is not None
             if sinkMessage is not None:
                 sourceMessage = sourceMessage.clone()
                 sourceMessage.divide(sinkMessage)

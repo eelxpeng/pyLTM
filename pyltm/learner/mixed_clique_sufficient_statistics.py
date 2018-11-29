@@ -66,8 +66,10 @@ class MixedCliqueSufficientStatistics(SufficientStatistics):
     def add(self, potential):
         '''potential: batched cliquepotential'''
         batch_size = potential.logp.shape[0]
+        # maybe normalize it in case hasn't been normalized
+        logp = potential.logp - logsumexp(potential.logp, axis=1, keepdims=True)
         for i in range(potential.size):
-            weight = np.expand_dims(np.exp(potential.logp[:, i]), axis=1)  # (N, 1)
+            weight = np.expand_dims(np.exp(logp[:, i]), axis=1)  # (N, 1)
             self.p[i] += np.sum(weight)
             self.mu[i] += np.sum(potential.mu[:, i, :] * weight, axis=0)  # (N, D) x (N, 1)
             self.covar[i] += np.sum(np.concatenate([np.expand_dims(np.outer(potential.mu[j, i, :], potential.mu[j, i, :]) * weight[j], axis=0)

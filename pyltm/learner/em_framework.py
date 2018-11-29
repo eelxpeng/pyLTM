@@ -18,17 +18,17 @@ class EMFramework(object):
     '''
 
 
-    def __init__(self, model, batch_size, covariance_lower_bound=0.01):
+    def __init__(self, model, covariance_lower_bound=0.01):
         '''
         model: Gltm
         '''
         self._model = model
-        self.sufficientStatistics, self.batchSufficientStatistics = self.initializeSufficientStatistics(batch_size)
         self.covariance_constrainer = CovarianceConstrainer(lower_bound=covariance_lower_bound)
         
     def initializeSufficientStatistics(self, batch_size):
         ctp = NaturalCliqueTreePropagation(self._model)
         ctp.initializePotentials()
+        ctp.distributeMessage(ctp._tree.pivot)
         tree = ctp.cliqueTree()
         cliques = tree.cliques
         sufficientStatistics = [None]*len(cliques)
@@ -44,7 +44,8 @@ class EMFramework(object):
                 raise Exception("unknown type of clique")
         return sufficientStatistics, batchSufficientStatistics
         
-    def reset(self):
+    def reset(self, batch_size):
+        self.sufficientStatistics, self.batchSufficientStatistics = self.initializeSufficientStatistics(batch_size)
         for stat in self.batchSufficientStatistics:
             stat.reset()
         
@@ -74,13 +75,19 @@ class EMFramework(object):
         for node in self._model.nodes:
             clique = tree.getClique(node.variable)
             index = cliques.index(clique)
-            variableStatisticMap[node.variable] = (self.sufficientStatistics[index], self.batchSufficientStatistics[index])
+            # variableStatisticMap[node.variable] = (self.sufficientStatistics[index], self.batchSufficientStatistics[index])
+            variableStatisticMap[node.variable] = index
         return variableStatisticMap, ctp.loglikelihood
     
     def stepwise_m_step(self, variableStatisticMap, learning_rate, updatevar=True):
+        updated = set()
         for node in self._model.nodes:
-            statistics, batchStatistics = variableStatisticMap[node.variable]
-            statistics.update(batchStatistics, learning_rate, updatevar=updatevar)
+            # statistics, batchStatistics = variableStatisticMap[node.variable]
+            index = variableStatisticMap[node.variable]
+            statistics, batchStatistics = self.sufficientStatistics[index], self.batchSufficientStatistics[index]
+            if index not in updated:
+                statistics.update(batchStatistics, learning_rate, updatevar=updatevar)
+                updated.add(index)
             if isinstance(node, ContinuousBeliefNode):
                 cgparameters = statistics.computePotential(node.variable, None if node.getParent() is None else node.getParent().variable)
                 for i in range(node.potential.size):
@@ -94,8 +101,8 @@ class EMFramework(object):
                 node.potential.parameter.prob[:] = cptparameter.prob
                 # node.potential.parameter.prob[:] = node.potential.parameter.prob + learning_rate * (cptparameter.prob - node.potential.parameter.prob) 
     
-    def stepwise_em_step(self, data, varNames, learning_rate, updatevar=True):
-        self.reset()
+    def stepwise_em_step(self, data, varNames, learning_rate, batch_size, updatevar=True):
+        self.reset(batch_size)
         variableStatisticMap, loglikelihood = self.stepwise_e_step(data, varNames)
         self.stepwise_m_step(variableStatisticMap, learning_rate, updatevar)
         return loglikelihood

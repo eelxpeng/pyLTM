@@ -18,6 +18,7 @@ class DiscreteCliqueSufficientStatistics(SufficientStatistics):
         Constructor
         '''
         self._variables = node.potential._variables
+        node.potential.normalize()
         self.prob = np.exp(node.potential.logprob.copy()) * batch_size
         
     def reset(self):
