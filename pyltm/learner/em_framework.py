@@ -86,13 +86,14 @@ class EMFramework(object):
             index = variableStatisticMap[node.variable]
             statistics, batchStatistics = self.sufficientStatistics[index], self.batchSufficientStatistics[index]
             if index not in updated:
-                statistics.update(batchStatistics, learning_rate, updatevar=updatevar)
+                statistics.update(batchStatistics, learning_rate)
                 updated.add(index)
             if isinstance(node, ContinuousBeliefNode):
                 cgparameters = statistics.computePotential(node.variable, None if node.getParent() is None else node.getParent().variable)
                 for i in range(node.potential.size):
                     node.potential.get(i).mu[:] = cgparameters[i].mu
-                    node.potential.get(i).covar[:] = cgparameters[i].covar
+                    if updatevar:
+                        node.potential.get(i).covar[:] = cgparameters[i].covar
                     # node.potential.get(i).mu[:] = node.potential.get(i).mu + learning_rate * (cgparameters[i].mu - node.potential.get(i).mu)
                     # node.potential.get(i).covar[:] = node.potential.get(i).covar + learning_rate * (cgparameters[i].covar - node.potential.get(i).covar)
                 self.covariance_constrainer.adjust(node.potential)

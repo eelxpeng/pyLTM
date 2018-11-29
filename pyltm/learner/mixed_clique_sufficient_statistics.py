@@ -75,12 +75,11 @@ class MixedCliqueSufficientStatistics(SufficientStatistics):
             self.covar[i] += np.sum(np.concatenate([np.expand_dims(np.outer(potential.mu[j, i, :], potential.mu[j, i, :]) * weight[j], axis=0)
                               for j in range(batch_size)], axis=0), axis=0)
             
-    def update(self, batchStatistics, learning_rate, updatevar=True):
+    def update(self, batchStatistics, learning_rate):
         assert(self.size==batchStatistics.size)
         self.p[:] = self.p + learning_rate * (batchStatistics.p - self.p)
         self.mu[:] = self.mu + learning_rate * (batchStatistics.mu - self.mu)
-        if updatevar:
-            self.covar[:] = self.covar + learning_rate * (batchStatistics.covar - self.covar)
+        self.covar[:] = self.covar + learning_rate * (batchStatistics.covar - self.covar)
         
     def computePotential(self, variable, parent):
         if isinstance(variable, JointContinuousVariable):
