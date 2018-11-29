@@ -11,6 +11,7 @@ import numpy as np
 from pyltm.model.parameter import cgparameter
 from pyltm.model.variable.discrete_variable import DiscreteVariable
 from pyltm.model.parameter.cptparameter import CPTParameter
+from pyltm.util.utils import logsumexp
 
 class MixedCliqueSufficientStatistics(SufficientStatistics):
     '''
@@ -37,11 +38,13 @@ class MixedCliqueSufficientStatistics(SufficientStatistics):
     def resetParameters(self, cliquepotential, batch_size):
         cardinality = 1 if self._discreteVariable is None else self._discreteVariable.getCardinality()
         self.size = cardinality
-        self.p = cliquepotential.p.copy()           # (K, )
+        logp = cliquepotential.logp.copy()           # (K, )
+        logconstant = logsumexp(logp)
+        self.p = np.exp(logp - logconstant) # normalize
         self.mu = cliquepotential.mu.copy()         # (K, D)
         self.covar = cliquepotential.covar.copy()   # (K, D, D)
-        self.normalize()
-        self.p *= self.p * batch_size   # sufficient counts
+        # self.normalize()
+        self.p = self.p * batch_size   # sufficient counts
         for i in range(cardinality):
             # sufficient sum_square
             self.covar[i] = (self.covar[i] + np.outer(self.mu[i], self.mu[i])) * self.p[i]
@@ -62,19 +65,20 @@ class MixedCliqueSufficientStatistics(SufficientStatistics):
         
     def add(self, potential):
         '''potential: batched cliquepotential'''
-        batch_size = potential.p.shape[0]
+        batch_size = potential.logp.shape[0]
         for i in range(potential.size):
-            weight = np.expand_dims(potential.p[:, i], axis=1)  # (N, 1)
+            weight = np.expand_dims(np.exp(potential.logp[:, i]), axis=1)  # (N, 1)
             self.p[i] += np.sum(weight)
             self.mu[i] += np.sum(potential.mu[:, i, :] * weight, axis=0)  # (N, D) x (N, 1)
             self.covar[i] += np.sum(np.concatenate([np.expand_dims(np.outer(potential.mu[j, i, :], potential.mu[j, i, :]) * weight[j], axis=0)
                               for j in range(batch_size)], axis=0), axis=0)
             
-    def update(self, batchStatistics, learning_rate):
+    def update(self, batchStatistics, learning_rate, updatevar=True):
         assert(self.size==batchStatistics.size)
         self.p[:] = self.p + learning_rate * (batchStatistics.p - self.p)
         self.mu[:] = self.mu + learning_rate * (batchStatistics.mu - self.mu)
-        self.covar[:] = self.covar + learning_rate * (batchStatistics.covar - self.covar)
+        if updatevar:
+            self.covar[:] = self.covar + learning_rate * (batchStatistics.covar - self.covar)
         
     def computePotential(self, variable, parent):
         if isinstance(variable, JointContinuousVariable):

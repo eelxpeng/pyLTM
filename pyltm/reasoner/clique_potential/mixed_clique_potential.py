@@ -10,6 +10,7 @@ from .clique_potential import CliquePotential
 from .discrete_clique_potential import DiscreteCliquePotential
 from pyltm.model.variable import Variable, JointContinuousVariable, DiscreteVariable
 from pyltm.model.potential import CGPotential, CPTPotential
+from pyltm.util import logsumexp
 
 class MixedCliquePotential(CliquePotential):
     '''
@@ -31,7 +32,7 @@ class MixedCliquePotential(CliquePotential):
         D = potential.dimension
         self.size = K
         self.dimension = D
-        self.p = np.array([potential.get(i).p for i in range(potential.size)])
+        self.logp = np.log(np.array([potential.get(i).p for i in range(potential.size)]))
         self.mu = np.vstack([potential.get(i).mu for i in range(potential.size)])
         self.covar = np.concatenate([np.expand_dims(potential.get(i).covar, axis=0) for i in range(potential.size)], axis=0)
         self.logNormalization = constant
@@ -39,29 +40,31 @@ class MixedCliquePotential(CliquePotential):
     def combine(self, other):
         '''other: MixedCliquePotential'''
         assert(self.size == other.size);
-        self.p *= other.p
+        self.logp += other.logp
         self.mu[:] = other.mu
         self.covar[:] = other.covar
         self.logNormalization += other.logNormalization
         
     def isBatch(self):
-        return len(self.p.shape) == 2
+        return len(self.logp.shape) == 2
     
     def multiply(self, otherDiscreteCliquePotential):
-        self.p *= otherDiscreteCliquePotential.prob
+        # self.p *= otherDiscreteCliquePotential.prob
+        self.logp += otherDiscreteCliquePotential.logprob
+        self.logNormalization += otherDiscreteCliquePotential.logNormalization
         
     def normalize(self, constant=None):
         if constant is None:
             if self.isBatch():
-                batch_size = self.p.shape[0]
-                constant = np.sum(self.p, axis=1, keepdims=True)
-                normalizeConstant = np.reshape(constant, (batch_size, ))
+                batch_size = self.logp.shape[0]
+                logconstant = logsumexp(self.logp, axis=1, keepdims=True)
+                lognormalizeConstant = np.reshape(logconstant, (batch_size, ))
             else:
-                constant = np.sum(self.p)
-                normalizeConstant = constant
+                logconstant = logsumexp(self.logp)
+                lognormalizeConstant = logconstant
         try:
-            self.p /= constant
-            self.logNormalization += np.log(normalizeConstant) + self.logNormalization
+            self.logp[:] = self.logp - logconstant
+            self.logNormalization += lognormalizeConstant
         except:
             pdb.set_trace()
             raise Exception("error!")
@@ -79,9 +82,10 @@ class MixedCliquePotential(CliquePotential):
 #         for i in range(self.size):
 #             batchp[:, i] = self.p[i]*stats.multivariate_normal.pdf(synced_values, mean=self.mu[i], cov=self.covar[i])
         for i in range(self.size):
-            batchp[:, i] = self.p[i]*stats.multivariate_normal.logpdf(synced_values, mean=self.mu[i], cov=self.covar[i])
+            # why previously it is self.p[i]*logpdf ??? does not make sense.
+            batchp[:, i] = self.logp[i] + stats.multivariate_normal.logpdf(synced_values, mean=self.mu[i], cov=self.covar[i])
         maxlogP = np.max(batchp, axis=1, keepdims=True)
-        self.p = np.exp(batchp - maxlogP)
+        self.logp = batchp - maxlogP
         self.logNormalization += np.squeeze(maxlogP, axis=1)
         self.mu = np.repeat(np.expand_dims(synced_values, axis=1), self.size, axis=1)
         self.covar = np.zeros((num, self.size, self.dimension, self.dimension))
@@ -100,7 +104,7 @@ class MixedCliquePotential(CliquePotential):
         return DiscreteCliquePotential of discrete variable
         '''
         cpt = DiscreteCliquePotential(CPTPotential(self._discreteVariable))
-        cpt.prob = self.p.copy()
+        cpt.logprob = self.logp.copy()
         cpt.logNormalization = self.logNormalization.copy()
         return cpt
     
@@ -109,7 +113,7 @@ class MixedCliquePotential(CliquePotential):
         discreteVar = self._discreteVariable
         cgpotential = CGPotential(continuousVars, discreteVar)
         potential = MixedCliquePotential(cgpotential)
-        potential.p = self.p.copy()
+        potential.logp = self.logp.copy()
         potential.mu = self.mu.copy()
         potential.covar = self.covar.copy()
         potential.logNormalization = self.logNormalization

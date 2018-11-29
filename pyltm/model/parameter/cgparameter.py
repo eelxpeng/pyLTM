@@ -44,6 +44,13 @@ class CGParameter(Parameter):
         return p*Normal(value | mu, covar)
         '''
         return self.p * stats.multivariate_normal.pdf(value, mean=self.mu, cov=self.covar)
+
+    def logpdf(self, value):
+        '''
+        value: numpy array, same dimension as mu
+        return p*Normal(value | mu, covar)
+        '''
+        return self.p * stats.multivariate_normal.pdf(value, mean=self.mu, cov=self.covar)
         
     def __str__(self):
         toStr = self.__class__.__name__ + "\n"

@@ -18,13 +18,13 @@ class DiscreteCliqueSufficientStatistics(SufficientStatistics):
         Constructor
         '''
         self._variables = node.potential._variables
-        self.prob = node.potential.prob.copy() * batch_size
+        self.prob = np.exp(node.potential.logprob.copy()) * batch_size
         
     def reset(self):
         self.prob[:] = 0
         
     def add(self, potential):
-        self.prob[:] += np.sum(potential.prob, axis=0)
+        self.prob[:] += np.sum(np.exp(potential.logprob), axis=0)
         
     def update(self, statistics, learning_rate):
         self.prob[:] = self.prob + learning_rate * (statistics.prob - self.prob)

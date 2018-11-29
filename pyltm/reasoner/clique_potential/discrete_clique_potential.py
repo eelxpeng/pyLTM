@@ -4,9 +4,11 @@ Created on 18 Sep 2018
 @author: Bryan
 '''
 import numpy as np
+import math
 from sortedcontainers import SortedSet
 from .clique_potential import CliquePotential
 from pyltm.model import CPTPotential
+from pyltm.util.utils import logsumexp
 
 class DiscreteCliquePotential(CliquePotential):
     '''
@@ -19,11 +21,11 @@ class DiscreteCliquePotential(CliquePotential):
         potential: cptpotential
         '''
         self._variables = potential._variables
-        self.prob = potential.parameter.prob.copy()
+        self.logprob = np.log(potential.parameter.prob.copy())
         self.logNormalization = constant
         
     def isBatch(self):
-        return len(self.prob.shape) == (len(self._variables)+1)
+        return len(self.logprob.shape) == (len(self._variables)+1)
     
     def times(self, other):
         '''other: DiscreteCliquePotential
@@ -31,7 +33,7 @@ class DiscreteCliquePotential(CliquePotential):
         TODO: convert to batch operation'''
         if isinstance(other, float) or isinstance(other, int):
             result = self.clone()
-            result.prob *= other
+            result.logprob += math.log(other)
             return
         
         other = other.function()
@@ -67,24 +69,24 @@ class DiscreteCliquePotential(CliquePotential):
         # utilize the broadcast of numpy array
         isbatch = self.isBatch() or other.isBatch()
         diff_axes = len(var_prod) - len(self.variables)
-        arr = self.prob
+        arr = self.logprob
         for i in range(diff_axes):
             arr = np.expand_dims(arr, axis=-1)
         fcpt = np.transpose(newcpt.parameter.prob.copy(), ftransformAxes)
         if isbatch and self.isBatch():
-            batch_size = self.prob.shape[0]
+            batch_size = self.logprob.shape[0]
             fcpt = np.repeat(np.expand_dims(fcpt, axis=0), batch_size, axis=0)
             freverseAxes = [0] + [x+1 for x in freverseAxes]
         fcpt[:] = arr
         fcpt = np.transpose(fcpt, freverseAxes)
         
         diff_axes = len(var_prod) - len(other.variables)
-        arr = other.prob
+        arr = other.logprob
         for i in range(diff_axes):
             arr = np.expand_dims(arr, axis=-1)
         gcpt = np.transpose(newcpt.parameter.prob.copy(), gtransformAxes)
         if isbatch and other.isBatch():
-            batch_size = other.prob.shape[0]
+            batch_size = other.logprob.shape[0]
             gcpt = np.repeat(np.expand_dims(gcpt, axis=0), batch_size, axis=0)
             greverseAxes = [0] + [x+1 for x in greverseAxes]
         gcpt[:] = arr
@@ -95,18 +97,18 @@ class DiscreteCliquePotential(CliquePotential):
                 fcpt = np.expand_dims(fcpt, axis=0)
             if not other.isBatch():
                 gcpt = np.expand_dims(gcpt, axis=0)
-        prod = fcpt*gcpt
+        logprod = fcpt+gcpt
         result = DiscreteCliquePotential(newcpt) 
-        result.prob = prod
+        result.logprob = logprod
         result.logNormalization = self.logNormalization + other.logNormalization
         return result
         
     def divide(self, other):
         '''in place divide'''
         if isinstance(other, float) or isinstance(other, int):
-            self.prob[:] = self.prob / other
+            self.logprob[:] = self.logprob - math.log(other)
         else:
-            self.prob[:] = self.prob / np.maximum(other.prob, 1e-10)
+            self.logprob[:] = self.logprob - other.logprob
             self.logNormalization -= other.logNormalization
             
     def function(self):
@@ -123,23 +125,23 @@ class DiscreteCliquePotential(CliquePotential):
     def normalize(self, constant=None):
         if constant is None:
             if self.isBatch():
-                batch_size = self.prob.shape[0]
-                axis = tuple(list(range(1, len(self.prob.shape))))
-                constant = np.sum(self.prob, axis=axis, keepdims=True)
-                normalizeConstant = np.reshape(constant, (batch_size, ))
+                batch_size = self.logprob.shape[0]
+                axis = tuple(list(range(1, len(self.logprob.shape))))
+                logconstant = logsumexp(self.logprob, axis=axis, keepdims=True)
+                lognormalizeConstant = np.reshape(logconstant, (batch_size, ))
             else:
-                constant = np.sum(self.prob)
-                normalizeConstant = constant
-            self.prob[:] = self.prob / constant
+                logconstant = logsumexp(self.logprob)
+                lognormalizeConstant = logconstant
+            self.logprob[:] = self.logprob - logconstant
         else:
-            self.prob[:] = self.prob / constant
-        self.logNormalization = np.log(normalizeConstant) + self.logNormalization
+            self.logprob[:] = self.logprob - math.log(constant)
+        self.logNormalization = lognormalizeConstant + self.logNormalization
     
     def normalizeOver(self, variable):
         # 0th dimension is batch_size
         index = self._variables.index(variable)+1
-        constant = np.sum(self.prob, axis=index, keepdims=True)
-        self.prob[:] = self.prob / constant
+        logconstant = logsumexp(self.logprob, axis=index, keepdims=True)
+        self.logprob[:] = self.logprob - logconstant
         
     def getDimension(self):
         return len(self._variables)
@@ -153,12 +155,12 @@ class DiscreteCliquePotential(CliquePotential):
         return DiscreteCliquePotential with the specified variable summed out
         '''
         variableIndex = self._variables.index(variable)
-        summedArray = np.sum(self.prob, axis=variableIndex+1)
+        summedArray = logsumexp(self.logprob, axis=variableIndex+1)
         newvars = list(self._variables)
         newvars.pop(variableIndex)
         cpt = CPTPotential(newvars)
         cliquepotential = DiscreteCliquePotential(cpt)
-        cliquepotential.prob = summedArray
+        cliquepotential.logprob = summedArray
         cliquepotential.logNormalization = self.logNormalization.copy()
         return cliquepotential
     
@@ -169,7 +171,7 @@ class DiscreteCliquePotential(CliquePotential):
         """
         variables = list(self._variables)
         result = DiscreteCliquePotential(CPTPotential(variables))
-        result.prob = self.prob.copy()
-        result.logNormalization = self.logNormalization
+        result.logprob = self.logprob.copy()
+        result.logNormalization = self.logNormalization.copy()
         return result
         

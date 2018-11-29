@@ -77,10 +77,10 @@ class EMFramework(object):
             variableStatisticMap[node.variable] = (self.sufficientStatistics[index], self.batchSufficientStatistics[index])
         return variableStatisticMap, ctp.loglikelihood
     
-    def stepwise_m_step(self, variableStatisticMap, learning_rate):
+    def stepwise_m_step(self, variableStatisticMap, learning_rate, updatevar=True):
         for node in self._model.nodes:
             statistics, batchStatistics = variableStatisticMap[node.variable]
-            statistics.update(batchStatistics, learning_rate)
+            statistics.update(batchStatistics, learning_rate, updatevar=updatevar)
             if isinstance(node, ContinuousBeliefNode):
                 cgparameters = statistics.computePotential(node.variable, None if node.getParent() is None else node.getParent().variable)
                 for i in range(node.potential.size):
@@ -94,10 +94,10 @@ class EMFramework(object):
                 node.potential.parameter.prob[:] = cptparameter.prob
                 # node.potential.parameter.prob[:] = node.potential.parameter.prob + learning_rate * (cptparameter.prob - node.potential.parameter.prob) 
     
-    def stepwise_em_step(self, data, varNames, learning_rate):
+    def stepwise_em_step(self, data, varNames, learning_rate, updatevar=True):
         self.reset()
         variableStatisticMap, loglikelihood = self.stepwise_e_step(data, varNames)
-        self.stepwise_m_step(variableStatisticMap, learning_rate)
+        self.stepwise_m_step(variableStatisticMap, learning_rate, updatevar)
         return loglikelihood
         
         

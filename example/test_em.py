@@ -76,7 +76,7 @@ if __name__ == '__main__':
         
     ctp.use(evidence)
     ctp.propagate()
-    latent = ctp.getMarginal(targetVar).prob
+    latent = np.exp(ctp.getMarginal(targetVar).logprob)
     y_pred = np.argmax(latent, axis=1)
     
     print(y_pred)
