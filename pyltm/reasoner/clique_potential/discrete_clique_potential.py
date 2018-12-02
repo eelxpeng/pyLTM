@@ -16,12 +16,12 @@ class DiscreteCliquePotential(CliquePotential):
     '''
 
 
-    def __init__(self, potential, constant=0):
+    def __init__(self, potential, constant=0, eps=1e-100):
         '''
         potential: cptpotential
         '''
         self._variables = potential._variables
-        self.logprob = np.log(potential.parameter.prob.copy())
+        self.logprob = np.log(np.maximum(potential.parameter.prob.copy(), eps))
         self.logNormalization = constant
         
     def isBatch(self):

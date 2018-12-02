@@ -18,7 +18,7 @@ class MixedCliquePotential(CliquePotential):
     '''
 
 
-    def __init__(self, potential, constant=0):
+    def __init__(self, potential, constant=0, eps=1e-100):
         '''
         potential: cgpotential
         self.p: (K)
@@ -32,7 +32,8 @@ class MixedCliquePotential(CliquePotential):
         D = potential.dimension
         self.size = K
         self.dimension = D
-        self.logp = np.log(np.array([potential.get(i).p for i in range(potential.size)]))
+        # self.logp = np.log(np.array([potential.get(i).p for i in range(potential.size)]))
+        self.logp = np.log(np.maximum(np.array([potential.get(i).p for i in range(potential.size)]), eps))
         self.mu = np.vstack([potential.get(i).mu for i in range(potential.size)])
         self.covar = np.concatenate([np.expand_dims(potential.get(i).covar, axis=0) for i in range(potential.size)], axis=0)
         self.logNormalization = constant
